@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem; // ต้องมีบรรทัดนี้
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class TeleportPortal : MonoBehaviour
 {
@@ -39,6 +40,6 @@ public class TeleportPortal : MonoBehaviour
     void EnterShop()
     {
         Debug.Log("กำลังเข้าสู่ 7-11...");
-        // ขั้นตอนถัดไปเราจะใส่ระบบโหลดฉากจริง
+        SceneManager.LoadScene(sceneName);
     }
 }
