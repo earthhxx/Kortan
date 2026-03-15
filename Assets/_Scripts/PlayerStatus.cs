@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // สำหรับใช้ TextMeshPro
+using TMPro;
 
 public class PlayerStatus : MonoBehaviour
 {
@@ -8,52 +8,113 @@ public class PlayerStatus : MonoBehaviour
     public float hunger = 100f;
     public float water = 100f;
     public int money = 0;
-    public float decreaseRate = 1.0f; // ลดลงวินาทีละ 1 หน่วย
+    public float decreaseRate = 1.0f;
 
     [Header("UI References")]
     public Slider hungerSlider;
     public Slider waterSlider;
-    public TextMeshProUGUI moneyText; // ใช้ตัวเดียวที่เป็น TMP
+    public TextMeshProUGUI moneyText;
 
     void Start()
     {
-        // อัปเดต UI ครั้งแรกตอนเริ่มเกม
-        UpdateMoneyUI();
+        // 1. โหลดข้อมูลก่อน
+        LoadPlayerData();
+        // 2. อัปเดต UI ให้ตรงกับค่าที่โหลดมา
+        UpdateAllUI();
     }
 
     void Update()
     {
-        // 1. ลดค่าความหิวและน้ำตามเวลา
+        // ลดค่าความหิวและน้ำตามเวลา
         if (hunger > 0) hunger -= decreaseRate * Time.deltaTime;
         if (water > 0) water -= decreaseRate * Time.deltaTime;
 
-        // 2. อัปเดตหลอดอาหาร/น้ำ (อัปเดตทุกเฟรมเพื่อให้หลอดค่อยๆ ลดสวยๆ)
+        // อัปเดตหลอด UI (เลื่อนไหลตาม Update)
         if (hungerSlider != null) hungerSlider.value = hunger;
         if (waterSlider != null) waterSlider.value = water;
 
-        // 3. เช็กถ้าหิวจนตาย
         if (hunger <= 0 || water <= 0)
         {
             Debug.Log("คุณตายแล้ว!");
         }
     }
 
-    // Method สำหรับเพิ่มเงิน (เรียกจาก Script เหรียญ)
+    // --- ระบบจัดการข้อมูล (Logic) ---
+
     public void AddMoney(int amount)
     {
         money += amount;
-        UpdateMoneyUI(); // อัปเดตตัวเลขเงินทันทีที่ได้เงิน
+        SavePlayerData(); // เซฟทันทีที่ได้เงิน
+        UpdateAllUI();
     }
 
-    void UpdateMoneyUI()
+    public bool SpendMoney(int amount)
     {
+        if (money >= amount)
+        {
+            money -= amount;
+            SavePlayerData();
+            UpdateAllUI();
+            return true;
+        }
+        return false;
+    }
+
+    public void AddHunger(float amount)
+    {
+        hunger = Mathf.Min(hunger + amount, 100f);
+        SavePlayerData();
+        UpdateAllUI();
+    }
+
+    public void AddWater(float amount)
+    {
+        water = Mathf.Min(water + amount, 100f);
+        SavePlayerData();
+        UpdateAllUI();
+    }
+
+    // --- ระบบ UI ---
+
+    void UpdateAllUI()
+    {
+        // อัปเดตตัวเลขเงิน
         if (moneyText != null)
         {
             moneyText.text = "Money: " + money + " Bath";
         }
+
+        // อัปเดตค่า Slider ทันที (เผื่อโหลดข้อมูลมาใหม่)
+        if (hungerSlider != null) hungerSlider.value = hunger;
+        if (waterSlider != null) waterSlider.value = water;
     }
 
-    // Method สำหรับเพิ่มอาหาร/น้ำ
-    public void AddHunger(float amount) => hunger = Mathf.Min(hunger + amount, 100f);
-    public void AddWater(float amount) => water = Mathf.Min(water + amount, 100f);
+    // --- ระบบ Save/Load (PlayerPrefs) ---
+
+    public void SavePlayerData()
+    {
+        PlayerPrefs.SetInt("SavedMoney", money);
+        PlayerPrefs.SetFloat("SavedHunger", hunger);
+        PlayerPrefs.SetFloat("SavedWater", water); // เพิ่มเซฟค่าน้ำด้วยครับ
+        PlayerPrefs.Save();
+        Debug.Log("บันทึกข้อมูลเรียบร้อย!");
+    }
+
+    public void LoadPlayerData()
+    {
+        money = PlayerPrefs.GetInt("SavedMoney", 0);
+        hunger = PlayerPrefs.GetFloat("SavedHunger", 100f);
+        water = PlayerPrefs.GetFloat("SavedWater", 100f); // โหลดค่าน้ำด้วย
+        Debug.Log("โหลดข้อมูลสำเร็จ!");
+    }
+
+    void OnApplicationQuit()
+    {
+        SavePlayerData(); // เซฟครั้งสุดท้ายก่อนปิดแอป
+    }
+    
+    void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus) SavePlayerData(); // เซฟเมื่อผู้เล่นพับจอ/สลับแอป
+    }
 }
