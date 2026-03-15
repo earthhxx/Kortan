@@ -15,36 +15,88 @@ public class PlayerStatus : MonoBehaviour
     public Slider waterSlider;
     public TextMeshProUGUI moneyText;
 
+    [Header("Death Settings")]
+    public GameObject gameOverUI;
+    public bool isDead = false;
+
+    // --- Unity Events ---
+
     void Start()
     {
-        // 1. โหลดข้อมูลก่อน
         LoadPlayerData();
-        // 2. อัปเดต UI ให้ตรงกับค่าที่โหลดมา
         UpdateAllUI();
     }
 
     void Update()
     {
-        // ลดค่าความหิวและน้ำตามเวลา
+        if (isDead) return;
+
+        HandleStatusDecrease();
+        CheckDeath();
+    }
+
+    // --- Status Logic ---
+
+    void HandleStatusDecrease()
+    {
+        // ลดค่าตามเวลา
         if (hunger > 0) hunger -= decreaseRate * Time.deltaTime;
         if (water > 0) water -= decreaseRate * Time.deltaTime;
 
-        // อัปเดตหลอด UI (เลื่อนไหลตาม Update)
+        // อัปเดต Slider ตลอดเวลาให้เห็นการลดที่ลื่นไหล
         if (hungerSlider != null) hungerSlider.value = hunger;
         if (waterSlider != null) waterSlider.value = water;
-
-        if (hunger <= 0 || water <= 0)
-        {
-            Debug.Log("คุณตายแล้ว!");
-        }
     }
 
-    // --- ระบบจัดการข้อมูล (Logic) ---
+    void CheckDeath()
+    {
+        if (hunger <= 0 || water <= 0)
+        {
+            Die();
+        }
+    }
+    void Die()
+    {
+        isDead = true;
+        Debug.Log("คุณตายแล้ว!");
+
+        if (gameOverUI != null) gameOverUI.SetActive(true);
+
+        // --- หยุดการเคลื่อนที่ ---
+        // ปิดสคริปต์เดินที่คุณเขียนเอง
+        if (GetComponent<PlayerMovement>() != null)
+            GetComponent<PlayerMovement>().enabled = false;
+
+        // ปลดล็อกเมาส์
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void ResetStatusForNewGame()
+    {
+        isDead = false;
+        hunger = 100f;
+        water = 100f;
+        money = 0;
+
+        // --- กลับมาเดินได้ ---
+        // เปิดสคริปต์เดินให้กลับมาทำงาน
+        if (GetComponent<PlayerMovement>() != null)
+            GetComponent<PlayerMovement>().enabled = true;
+
+        // ล็อกเมาส์กลับคืน
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        UpdateAllUI();
+    }
+
+    // --- Public Methods (เรียกใช้จากสคริปต์อื่น) ---
 
     public void AddMoney(int amount)
     {
         money += amount;
-        SavePlayerData(); // เซฟทันทีที่ได้เงิน
+        SavePlayerData();
         UpdateAllUI();
     }
 
@@ -74,47 +126,42 @@ public class PlayerStatus : MonoBehaviour
         UpdateAllUI();
     }
 
-    // --- ระบบ UI ---
+    // --- UI & Persistence ---
 
     void UpdateAllUI()
     {
-        // อัปเดตตัวเลขเงิน
         if (moneyText != null)
-        {
             moneyText.text = "Money: " + money + " Bath";
-        }
 
-        // อัปเดตค่า Slider ทันที (เผื่อโหลดข้อมูลมาใหม่)
         if (hungerSlider != null) hungerSlider.value = hunger;
         if (waterSlider != null) waterSlider.value = water;
     }
-
-    // --- ระบบ Save/Load (PlayerPrefs) ---
 
     public void SavePlayerData()
     {
         PlayerPrefs.SetInt("SavedMoney", money);
         PlayerPrefs.SetFloat("SavedHunger", hunger);
-        PlayerPrefs.SetFloat("SavedWater", water); // เพิ่มเซฟค่าน้ำด้วยครับ
+        PlayerPrefs.SetFloat("SavedWater", water);
         PlayerPrefs.Save();
         Debug.Log("บันทึกข้อมูลเรียบร้อย!");
     }
-
     public void LoadPlayerData()
     {
         money = PlayerPrefs.GetInt("SavedMoney", 0);
         hunger = PlayerPrefs.GetFloat("SavedHunger", 100f);
-        water = PlayerPrefs.GetFloat("SavedWater", 100f); // โหลดค่าน้ำด้วย
+        water = PlayerPrefs.GetFloat("SavedWater", 100f);
         Debug.Log("โหลดข้อมูลสำเร็จ!");
     }
 
+    // --- Lifecycle Hooks ---
+
     void OnApplicationQuit()
     {
-        SavePlayerData(); // เซฟครั้งสุดท้ายก่อนปิดแอป
+        SavePlayerData();
     }
-    
+
     void OnApplicationPause(bool pauseStatus)
     {
-        if (pauseStatus) SavePlayerData(); // เซฟเมื่อผู้เล่นพับจอ/สลับแอป
+        if (pauseStatus) SavePlayerData();
     }
 }

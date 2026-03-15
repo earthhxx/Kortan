@@ -899,9 +899,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2de1daf07a7b424b99ec9097dce9de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
-  itemName: "\u0E19\u0E49\u0E33"
-  price: 25
-  hungerRestore: 30
+  type: 1
+  itemName: "\u0E19\u0E49\u0E33\u0E14\u0E37\u0E48\u0E21"
+  price: 7
+  restoreAmount: 30
   interactUI: {fileID: 78097800}
   promptText: {fileID: 840469741}
 --- !u!1 &1483111127
@@ -1064,9 +1065,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2de1daf07a7b424b99ec9097dce9de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
+  type: 0
   itemName: "\u0E02\u0E49\u0E32\u0E27\u0E01\u0E25\u0E48\u0E2D\u0E07"
   price: 25
-  hungerRestore: 30
+  restoreAmount: 30
   interactUI: {fileID: 78097800}
   promptText: {fileID: 840469741}
 --- !u!65 &1558121238

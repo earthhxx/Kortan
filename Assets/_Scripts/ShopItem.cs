@@ -4,20 +4,23 @@ using TMPro;
 
 public class ShopItem : MonoBehaviour
 {
+    // สร้างตัวเลือกประเภทไอเทม
+    public enum ItemType { Food, Water }
+
     [Header("Item Settings")]
-    public string itemName = "ข้าวกล่อง";
+    public ItemType type = ItemType.Food; // เลือกใน Inspector ได้เลย
+    public string itemName = "ของกิน/ของดื่ม";
     public int price = 25;
-    public float hungerRestore = 30f;
+    public float restoreAmount = 30f; // ค่าพลังที่จะฟื้นฟู (หิว หรือ น้ำ)
 
     [Header("UI Reference")]
-    public GameObject interactUI; // ลาก InteractPrompt มาใส่
-    public TextMeshProUGUI promptText; // ลาก Text ใน InteractPrompt มาใส่
+    public GameObject interactUI; 
+    public TextMeshProUGUI promptText; 
 
     private bool isPlayerNearby = false;
 
     void Update()
     {
-        // ถ้าอยู่ใกล้และกด E
         if (isPlayerNearby && Keyboard.current.eKey.wasPressedThisFrame)
         {
             BuyItem();
@@ -26,17 +29,23 @@ public class ShopItem : MonoBehaviour
 
     void BuyItem()
     {
-        // หาตัว PlayerStatus
         PlayerStatus playerStatus = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStatus>();
 
         if (playerStatus != null)
         {
-            // ลองจ่ายเงิน
             if (playerStatus.SpendMoney(price))
             {
-                // ถ้าจ่ายผ่าน ให้เพิ่มค่าความหิว
-                playerStatus.AddHunger(hungerRestore);
-                Debug.Log("ซื้อ " + itemName + " สำเร็จ!");
+                // เช็กประเภทไอเทมแล้วเพิ่มค่าให้ถูกหลอด
+                if (type == ItemType.Food)
+                {
+                    playerStatus.AddHunger(restoreAmount);
+                }
+                else if (type == ItemType.Water)
+                {
+                    playerStatus.AddWater(restoreAmount);
+                }
+
+                Debug.Log($"ซื้อ {itemName} สำเร็จ!");
             }
             else
             {
@@ -47,7 +56,6 @@ public class ShopItem : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Trigger ทำงาน! สิ่งที่มาชนคือ: " + other.name);
         if (other.CompareTag("Player"))
         {
             isPlayerNearby = true;
