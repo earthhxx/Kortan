@@ -636,7 +636,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2de1daf07a7b424b99ec9097dce9de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
-  data: {fileID: 0}
+  data: {fileID: 11400000, guid: 629153a25c55c3b439789b9ed285c0e4, type: 2}
   interactUI: {fileID: 78097800}
   promptText: {fileID: 840469741}
 --- !u!65 &455982988
@@ -2375,7 +2375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2de1daf07a7b424b99ec9097dce9de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
-  data: {fileID: 0}
+  data: {fileID: 11400000, guid: f3910c7def4c14b4a9bad172556c1597, type: 2}
   interactUI: {fileID: 78097800}
   promptText: {fileID: 840469741}
 --- !u!65 &1558121238
