@@ -26,3 +26,17 @@
 ## 4. Controls & Input
 * **Custom Movement:** A bespoke movement and camera script supporting **Mouse Delta** inputs and custom **Gravity** physics.
 * **Input State Control:** A dynamic system to enable or disable player controls based on game events (e.g., freezing movement upon death).
+
+
+# Upcoming Updates (Planned Features)
+
+### Inventory System
+* **Quick Access UI:** Toggle the Inventory interface by pressing the **[I]** key.
+* **Consumption Logic:** Supports **Double-Click** to consume items instantly from the inventory.
+* **Streamlined Feedback:** Focuses on immediate use without displaying specific restoration values for a cleaner user experience.
+
+### Shopping Cart & Checkout System (7-11 Style)
+* **Cart Interaction:** Ability to approach items and press **[E]** to add them to a virtual shopping cart.
+* **Checkout Point:** A dedicated payment zone where the system checks the player's balance.
+    * **Transaction Validation:** If funds are insufficient, the transaction is denied.
+    * **Inventory Integration:** Upon successful payment, items are cleared from the cart and automatically added to the player's permanent inventory.
