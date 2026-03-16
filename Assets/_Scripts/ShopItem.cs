@@ -4,66 +4,48 @@ using TMPro;
 
 public class ShopItem : MonoBehaviour
 {
-    // สร้างตัวเลือกประเภทไอเทม
-    public enum ItemType { Food, Water }
-
-    [Header("Item Settings")]
-    public ItemType type = ItemType.Food; // เลือกใน Inspector ได้เลย
-    public string itemName = "ของกิน/ของดื่ม";
-    public int price = 25;
-    public float restoreAmount = 30f; // ค่าพลังที่จะฟื้นฟู (หิว หรือ น้ำ)
+    // ลากไฟล์ ScriptableObject (เช่น Oishi_GreenTea) มาใส่ตรงนี้ใน Inspector
+    public ItemData data;
 
     [Header("UI Reference")]
-    public GameObject interactUI; 
-    public TextMeshProUGUI promptText; 
+    public GameObject interactUI;
+    public TextMeshProUGUI promptText;
 
     private bool isPlayerNearby = false;
 
     void Update()
     {
-        if (isPlayerNearby && Keyboard.current.eKey.wasPressedThisFrame)
+        // เช็กด้วยว่ามีข้อมูล data หรือยังก่อนจะกดซื้อ
+        if (isPlayerNearby && Keyboard.current.eKey.wasPressedThisFrame && data != null)
         {
-            BuyItem();
+            AddToCart(); // เปลี่ยนชื่อฟังก์ชันให้ตรงกับสิ่งที่จะทำ
         }
     }
 
-    void BuyItem()
+    void AddToCart()
     {
         PlayerStatus playerStatus = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStatus>();
 
         if (playerStatus != null)
         {
-            if (playerStatus.SpendMoney(price))
-            {
-                // เช็กประเภทไอเทมแล้วเพิ่มค่าให้ถูกหลอด
-                if (type == ItemType.Food)
-                {
-                    playerStatus.AddHunger(restoreAmount);
-                }
-                else if (type == ItemType.Water)
-                {
-                    playerStatus.AddWater(restoreAmount);
-                }
-
-                Debug.Log($"ซื้อ {itemName} สำเร็จ!");
-            }
-            else
-            {
-                Debug.Log("เงินไม่พอซื้อ " + itemName);
-            }
+            // ส่งข้อมูลไอเทม (data) ไปที่ตะกร้าในตัว Player
+            // เดี๋ยวเราจะไปสร้างฟังก์ชัน AddToCart ใน PlayerStatus กันครับ
+            playerStatus.AddItemToCart(data); 
+            Debug.Log($"เพิ่ม {data.itemName} ลงในรถเข็นแล้ว!");
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && data != null)
         {
             isPlayerNearby = true;
             if (interactUI != null)
             {
                 interactUI.SetActive(true);
-                if (promptText != null) 
-                    promptText.text = $"[E] ซื้อ {itemName} ({price} บาท)";
+                if (promptText != null)
+                    // ดึงชื่อและราคามาจาก ScriptableObject โดยตรง
+                    promptText.text = $"[E] เก็บ {data.itemName} ({data.price} บาท)";
             }
         }
     }
