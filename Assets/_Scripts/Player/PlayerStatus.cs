@@ -35,7 +35,6 @@ public class PlayerStatus : MonoBehaviour
             Destroy(this.gameObject);
             return;
         }
-        DontDestroyOnLoad(this.gameObject);
     }
 
     void Start()
