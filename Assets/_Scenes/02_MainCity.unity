@@ -3898,11 +3898,11 @@ Transform:
   m_GameObject: {fileID: 1268702673}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11.14684, y: 0.94749, z: -3.07686}
+  m_LocalPosition: {x: -12.85744, y: 0, z: 5.5395904}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1515890130}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1268702675
 MonoBehaviour:
@@ -4706,6 +4706,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1268702674}
   - {fileID: 865721951}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4803,6 +4804,7 @@ MonoBehaviour:
   hungerSlider: {fileID: 363379315}
   waterSlider: {fileID: 1946571213}
   moneyText: {fileID: 782933984}
+  cartUI: {fileID: 0}
   gameOverUI: {fileID: 2032803141}
   isDead: 0
 --- !u!143 &1661842019
@@ -5938,5 +5940,4 @@ SceneRoots:
   - {fileID: 691759703}
   - {fileID: 669826749}
   - {fileID: 1515890130}
-  - {fileID: 1268702674}
   - {fileID: 1661842023}

@@ -14,7 +14,6 @@ public class InventoryManager : MonoBehaviour
     {
         inventoryPanel.SetActive(false); // เริ่มมาให้ปิดไว้ก่อน
         RefreshInventory();
-        DontDestroyOnLoad(this.gameObject);
     }
 
     void Update()
