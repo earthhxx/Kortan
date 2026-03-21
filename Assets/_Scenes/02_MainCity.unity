@@ -333,6 +333,50 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 28375030490e89142b729add64ef1f51, type: 3}
   m_PrefabInstance: {fileID: 57601766}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &87462543
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 87462544}
+  - component: {fileID: 87462545}
+  m_Layer: 0
+  m_Name: Exit_From_711
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &87462544
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 87462543}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 16.58, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 691759703}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &87462545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 87462543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39365dea217f7234ca6dab8395bcd05c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneEntryDetector
 --- !u!1 &88532210
 GameObject:
   m_ObjectHideFlags: 0
@@ -1981,6 +2025,7 @@ Transform:
   - {fileID: 321606728}
   - {fileID: 876129725}
   - {fileID: 1239196089}
+  - {fileID: 87462544}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &737270600
@@ -2376,6 +2421,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeleportPortal
   sceneName: 03_7Eleven
+  spawnPointName: From_City_To_711
   interactUI: {fileID: 1812042459}
 --- !u!65 &876129727
 BoxCollider:
@@ -3870,8 +3916,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BeggingZone
   moneyPrefab: {fileID: 1327738139746591822, guid: 51cf4b19f54f36047b19b46ce1a3c889, type: 3}
   spawnPoint: {fileID: 885711442}
-  minWait: 3
-  maxWait: 10
+  minWaitTime: 3
+  maxWaitTime: 10
+  spawnRadius: 0.5
 --- !u!1 &1268702673
 GameObject:
   m_ObjectHideFlags: 0
@@ -3919,6 +3966,7 @@ MonoBehaviour:
   inventoryPanel: {fileID: 1893107287}
   itemContainer: {fileID: 1376237750}
   slotPrefab: {fileID: 5957669234993301971, guid: 5da0db2233000a0449ae587499fc0264, type: 3}
+  inventoryKeyNew: 23
 --- !u!1 &1276764144
 GameObject:
   m_ObjectHideFlags: 0

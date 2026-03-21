@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem; // ต้องมีบรรทัดนี้
-using TMPro;
 using UnityEngine.SceneManagement;
 
 public class TeleportPortal : MonoBehaviour
 {
-    public string sceneName = "03_7Eleven";
+    public string sceneName = "02_MainCity";
+    public string spawnPointName;
     public GameObject interactUI;
-    
+
     private bool canTeleport = false;
 
     void Update()
@@ -39,7 +39,10 @@ public class TeleportPortal : MonoBehaviour
 
     void EnterShop()
     {
-        Debug.Log("กำลังเข้าสู่ 7-11...");
-        SceneManager.LoadScene(sceneName);
+        // 1. จดชื่อจุดเกิดที่ต้องการ (ตั้งค่าชื่อนี้ใน Inspector ของตัว Portal)
+        SceneData.TargetSpawnPointName = spawnPointName;
+        // 2. โหลดฉาก
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+
     }
 }
