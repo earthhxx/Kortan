@@ -10,20 +10,26 @@ public class PlayerStatus : MonoBehaviour
     [Header("Player Systems")]
     [SerializeField] private CharacterStats characterStats;
     [SerializeField] private InventorySystem inventorySystem;
+    [SerializeField] private TimeManager timeManager;
 
     // Properties for external access (เช่นจาก InventorySlot) ให้เรียกผ่าน PlayerStatus แทนการเข้าถึง CharacterStats หรือ InventorySystem โดยตรง
     public CharacterStats CharacterStats => characterStats;
     public InventorySystem InventorySystem => inventorySystem;
+    public TimeManager TimeManager => timeManager;
 
     [Header("UI References")]
     [SerializeField] private Slider hungerSlider;
     [SerializeField] private Slider waterSlider;
+    [SerializeField] private Slider coldSlider;
     [SerializeField] private TextMeshProUGUI moneyText;
     [SerializeField] private CartUI cartUI;
     [SerializeField] private GameObject gameOverUI;
 
     [Header("Movement Reference")]
     [SerializeField] private PlayerMovement playerMovement;
+
+    [Header("Survival Settings")]
+    public bool hasWinterCoat = false; // สวิตช์เช็กเสื้อกันหนาว
 
     // Private fields
     private bool wasDeadLastFrame = false;
@@ -32,6 +38,7 @@ public class PlayerStatus : MonoBehaviour
     public float hunger => characterStats?.Hunger ?? 0f;
     public float water => characterStats?.Water ?? 0f;
     public int money => characterStats?.Money ?? 0;
+    public float cold => characterStats?.Cold ?? 0f;
     public bool isDead => characterStats?.IsDead ?? false;
     public List<ItemData> cartList => inventorySystem?.CartList;
     public List<ItemData> inventoryList => inventorySystem?.InventoryList;
@@ -137,6 +144,37 @@ public class PlayerStatus : MonoBehaviour
         characterStats.Save();
     }
 
+    public bool SpendMoney(int amount)
+    {
+        bool success = characterStats.SpendMoney(amount);
+        if (success)
+        {
+            UpdateAllUI();
+            characterStats.Save();
+        }
+        return success; //return true/false
+    }
+
+    // --- Survival Logic (เรียกจาก TimeManager) ---
+
+    public void TakeDamage(float amount)
+    {
+        if (characterStats != null)
+        {
+            characterStats.AddHunger(-amount); // หนาวมากจนหิว/หมดแรง
+            UpdateAllUI();
+        }
+    }
+
+    public void UpdateCold(float amount)
+    {
+        if (characterStats != null)
+        {
+            characterStats.AddCold(amount); // เพิ่มหรือลดค่าความหนาวใน CharacterStats
+            UpdateAllUI();
+        }
+    }
+
     public void AddHunger(float amount)
     {
         characterStats.AddHunger(amount);
@@ -149,17 +187,6 @@ public class PlayerStatus : MonoBehaviour
         characterStats.AddWater(amount);
         UpdateAllUI();
         characterStats.Save();
-    }
-
-    public bool SpendMoney(int amount)
-    {
-        bool success = characterStats.SpendMoney(amount);
-        if (success)
-        {
-            UpdateAllUI();
-            characterStats.Save();
-        }
-        return success; //return true/false
     }
 
     // --- Death & Reset ---
@@ -190,6 +217,7 @@ public class PlayerStatus : MonoBehaviour
     {
         characterStats.ResetForNewGame();
         inventorySystem.ClearAll();
+        timeManager?.HardResetTime();
 
         // Re-enable movement
         if (playerMovement != null)
@@ -206,19 +234,53 @@ public class PlayerStatus : MonoBehaviour
 
     void UpdateAllUI()
     {
-        characterStats.UpdateUI(hungerSlider, waterSlider, moneyText);
+        characterStats.UpdateUI(hungerSlider, waterSlider, coldSlider, moneyText);
+        timeManager?.UpdateUI();
     }
 
     public void SavePlayerData()
     {
         characterStats.Save();
         inventorySystem.Save();
+        timeManager?.SaveTime();
     }
 
     public void LoadPlayerData()
     {
         characterStats.Load();
         inventorySystem.Load();
+        timeManager?.LoadTime();
+    }
+
+    // ==========================================
+    // --- Auto-Save System (ระบบเซฟอัตโนมัติ) ---
+    // ==========================================
+
+    // ฟังก์ชันนี้จะทำงานเมื่อผู้เล่น "พับจอ" (สำหรับเกมมือถือ/แท็บเล็ต)
+    // หรือตอนกด Home Button
+    private void OnApplicationPause(bool isPaused)
+    {
+        if (isPaused)
+        {
+            // ถ้าไม่ได้อยู่ในสถานะตาย ให้เซฟเกมซะ
+            if (!characterStats.IsDead)
+            {
+                SavePlayerData();
+                Debug.Log("<color=yellow>System:</color> พับจอ! ทำการ Auto-Save เรียบร้อย");
+            }
+        }
+    }
+
+    // ฟังก์ชันนี้จะทำงานเมื่อผู้เล่น "ปิดเกม" 
+    // (กดกากบาท, Alt+F4, หรืองัดแอปทิ้ง)
+    private void OnApplicationQuit()
+    {
+        // ถ้าผู้เล่นตายอยู่ เราจะไม่เซฟทับ (ไม่งั้นโหลดมาก็จะตายอยู่ดี)
+        if (!characterStats.IsDead)
+        {
+            SavePlayerData();
+            Debug.Log("<color=red>System:</color> ออกจากเกม! ทำการ Auto-Save เรียบร้อย");
+        }
     }
 
     // ทริค Debug: แค่คลิกขวาที่ชื่อสคริปต์ PlayerStatus ใน Inspector แล้วกด "Debug: Clear Save" เซฟก็จะหายไปเลย!

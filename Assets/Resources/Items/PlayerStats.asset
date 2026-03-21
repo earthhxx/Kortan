@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643112514e5e6f6459a9eacd148340bc, type: 3}
   m_Name: PlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
+  startingMoney: 500
   maxHunger: 100
+  startingHunger: 100
   maxWater: 100
+  startingWater: 100
+  maxCold: 100
+  startingCold: 0
   decreaseRate: 1
-  hunger: 100
-  water: 100
-  money: 200
-  isDead: 0
