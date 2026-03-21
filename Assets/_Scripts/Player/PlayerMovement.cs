@@ -1,59 +1,164 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // เพิ่มตัวนี้เข้ามา
+using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public float mouseSensitivity = 0.5f; // ระบบใหม่ค่าจะละเอียดกว่าเดิม ลองเริ่มที่น้อยๆ
-    public Transform playerCamera;
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float sprintSpeed = 8f;
 
+    [Header("Camera")]
+    [SerializeField] private Transform playerCamera;
+    [SerializeField] private float mouseSensitivity = 0.5f;
+    [SerializeField] private float maxLookAngle = 90f;
+
+    [Header("Gravity & Jump")]
+    [SerializeField] private float jumpForce = 5f;
+    [SerializeField] private float gravity = -9.81f;
+    [SerializeField] private float groundDrag = -2f;
+
+    // Private fields
     private CharacterController controller;
     private float xRotation = 0f;
-    private Vector3 velocity;
-    private float gravity = -9.81f;
+    private Vector3 velocity = Vector3.zero;
+    private bool isGrounded;
 
-    void Start()
+    private void Start()
     {
-        controller = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked;
+        InitializeComponents();
+        LockCursor();
     }
 
-    void Update()
+    private void Update()
     {
-        // 1. ระบบหมุนมุมกล้อง (ใช้ Mouse.current)
-        if (Mouse.current != null)
-        {
-            Vector2 mouseDelta = Mouse.current.delta.ReadValue() * mouseSensitivity;
+        UpdateGroundState();
+        HandleCameraLook();
+        HandleMovementInput();
+        ApplyGravity();
+        ApplyMovement();
+    }
 
-            xRotation -= mouseDelta.y;
-            xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+    /// <summary>
+    /// Initialize required components
+    /// </summary>
+    private void InitializeComponents()
+    {
+        controller = GetComponent<CharacterController>();
 
-            playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-            transform.Rotate(Vector3.up * mouseDelta.x);
-        }
+        if (controller == null)
+            Debug.LogError("CharacterController not found on this GameObject!");
 
-        // 2. ระบบเดิน (ใช้ Keyboard.current)
+        if (playerCamera == null)
+            Debug.LogWarning("Player Camera not assigned! Camera look will be disabled.");
+    }
+
+    /// <summary>
+    /// Lock and hide the cursor
+    /// </summary>
+    private void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    /// <summary>
+    /// Update ground detection
+    /// </summary>
+    private void UpdateGroundState()
+    {
+        isGrounded = controller.isGrounded;
+
+        // Reset vertical velocity when grounded
+        if (isGrounded && velocity.y < 0)
+            velocity.y = groundDrag;
+    }
+
+    /// <summary>
+    /// Handle camera rotation with mouse input
+    /// </summary>
+    private void HandleCameraLook()
+    {
+        if (playerCamera == null || Mouse.current == null)
+            return;
+
+        Vector2 mouseDelta = Mouse.current.delta.ReadValue() * mouseSensitivity;
+
+        // Pitch (vertical look)
+        xRotation -= mouseDelta.y;
+        xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+        playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+
+        // Yaw (horizontal look)
+        transform.Rotate(Vector3.up * mouseDelta.x);
+    }
+
+    /// <summary>
+    /// Handle keyboard input for movement and jumping
+    /// </summary>
+    private void HandleMovementInput()
+    {
         var keyboard = Keyboard.current;
-        if (keyboard != null)
-        {
-            float x = 0;
-            float z = 0;
+        if (keyboard == null)
+            return;
 
-            if (keyboard.wKey.isPressed) z = 1;
-            if (keyboard.sKey.isPressed) z = -1;
-            if (keyboard.aKey.isPressed) x = -1;
-            if (keyboard.dKey.isPressed) x = 1;
+        // Get movement input (WASD)
+        float x = 0;
+        float z = 0;
 
-            Vector3 move = transform.right * x + transform.forward * z;
-            controller.Move(move * moveSpeed * Time.deltaTime);
-        }
+        if (keyboard.wKey.isPressed) z = 1;
+        if (keyboard.sKey.isPressed) z = -1;
+        if (keyboard.aKey.isPressed) x = -1;
+        if (keyboard.dKey.isPressed) x = 1;
 
-        // 3. แรงดึงดูด
-        if (controller.isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        // Check sprint input (Left Shift)
+        float currentSpeed = keyboard.leftShiftKey.isPressed ? sprintSpeed : moveSpeed;
+
+        // Calculate movement direction relative to player
+        Vector3 moveDirection = (transform.right * x + transform.forward * z).normalized;
+        Vector3 horizontalVelocity = moveDirection * currentSpeed;
+
+        // Keep vertical velocity
+        horizontalVelocity.y = velocity.y;
+        velocity = horizontalVelocity;
+
+        // Handle jump (Space)
+        if (keyboard.spaceKey.wasPressedThisFrame && isGrounded)
+            Jump();
+    }
+
+    /// <summary>
+    /// Apply jump force
+    /// </summary>
+    private void Jump()
+    {
+        velocity.y = jumpForce;
+        isGrounded = false;
+    }
+
+    /// <summary>
+    /// Apply gravity to vertical velocity
+    /// </summary>
+    private void ApplyGravity()
+    {
+        if (!isGrounded)
+            velocity.y += gravity * Time.deltaTime;
+    }
+
+    /// <summary>
+    /// Apply movement to character controller
+    /// </summary>
+    private void ApplyMovement()
+    {
+        if (controller != null)
+            controller.Move(velocity * Time.deltaTime);
+    }
+
+    /// <summary>
+    /// Unlock cursor (useful for pause menus)
+    /// </summary>
+    public void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Confined;
+        Cursor.visible = true;
     }
 }

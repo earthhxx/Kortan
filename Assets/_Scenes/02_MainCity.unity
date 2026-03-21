@@ -4782,8 +4782,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 5
-  mouseSensitivity: 1
+  sprintSpeed: 8
   playerCamera: {fileID: 1350603223}
+  mouseSensitivity: 1
+  maxLookAngle: 90
+  jumpForce: 5
+  gravity: -9.81
+  groundDrag: -2
 --- !u!114 &1661842018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4796,18 +4801,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 944226e4874b6804795d66ffa7c7102a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatus
-  hunger: 100
-  water: 100
-  money: 0
-  decreaseRate: 1
-  cartList: []
-  inventoryList: []
+  characterStats: {fileID: 11400000, guid: 6f3a06931ccbecc489ad3dfe39efd17d, type: 2}
+  inventorySystem: {fileID: 11400000, guid: 75d1204f17bd5634eb385fd230635a33, type: 2}
   hungerSlider: {fileID: 363379315}
   waterSlider: {fileID: 1946571213}
   moneyText: {fileID: 782933984}
   cartUI: {fileID: 0}
   gameOverUI: {fileID: 2032803141}
-  isDead: 0
+  playerMovement: {fileID: 0}
 --- !u!143 &1661842019
 CharacterController:
   m_ObjectHideFlags: 0

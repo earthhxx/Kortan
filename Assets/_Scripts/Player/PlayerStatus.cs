@@ -1,30 +1,40 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using UnityEngine.InputSystem; // เพิ่มตัวนี้เข้ามาเพื่อแก้ Error เรื่อง Input
 
 public class PlayerStatus : MonoBehaviour
 {
-    [Header("Status Settings")]
-    public float hunger = 100f;
-    public float water = 100f;
-    public int money = 0;
-    public float decreaseRate = 1.0f;
+    //import CharacterStats และ InventorySystem มาเป็นส่วนประกอบหลักของ PlayerStatus
+    [Header("Player Systems")]
+    [SerializeField] private CharacterStats characterStats;
+    [SerializeField] private InventorySystem inventorySystem;
 
-    [Header("Inventory & Cart")]
-    public List<ItemData> cartList = new List<ItemData>();
-    public List<ItemData> inventoryList = new List<ItemData>();
+    // Properties for external access (เช่นจาก InventorySlot) ให้เรียกผ่าน PlayerStatus แทนการเข้าถึง CharacterStats หรือ InventorySystem โดยตรง
+    public CharacterStats CharacterStats => characterStats;
+    public InventorySystem InventorySystem => inventorySystem;
 
     [Header("UI References")]
-    public Slider hungerSlider;
-    public Slider waterSlider;
-    public TextMeshProUGUI moneyText;
-    public CartUI cartUI;
+    [SerializeField] private Slider hungerSlider;
+    [SerializeField] private Slider waterSlider;
+    [SerializeField] private TextMeshProUGUI moneyText;
+    [SerializeField] private CartUI cartUI;
+    [SerializeField] private GameObject gameOverUI;
 
-    [Header("Death Settings")]
-    public GameObject gameOverUI;
-    public bool isDead = false;
+    [Header("Movement Reference")]
+    [SerializeField] private PlayerMovement playerMovement;
+
+    // Private fields
+    private bool wasDeadLastFrame = false;
+
+    // Legacy properties for backward compatibility
+    public float hunger => characterStats?.Hunger ?? 0f;
+    public float water => characterStats?.Water ?? 0f;
+    public int money => characterStats?.Money ?? 0;
+    public bool isDead => characterStats?.IsDead ?? false;
+    public List<ItemData> cartList => inventorySystem?.CartList;
+    public List<ItemData> inventoryList => inventorySystem?.InventoryList;
 
     void Awake()
     {
@@ -35,6 +45,23 @@ public class PlayerStatus : MonoBehaviour
             Destroy(this.gameObject);
             return;
         }
+
+        // Create systems if not assigned
+        if (characterStats == null)
+        {
+            characterStats = ScriptableObject.CreateInstance<CharacterStats>();
+            Debug.LogWarning("CharacterStats not assigned, created default instance");
+        }
+
+        if (inventorySystem == null)
+        {
+            inventorySystem = ScriptableObject.CreateInstance<InventorySystem>();
+            Debug.LogWarning("InventorySystem not assigned, created default instance");
+        }
+
+        // Get movement reference
+        if (playerMovement == null)
+            playerMovement = GetComponent<PlayerMovement>();
     }
 
     void Start()
@@ -45,21 +72,29 @@ public class PlayerStatus : MonoBehaviour
 
     void Update()
     {
-        if (isDead) return;
-
-        HandleStatusDecrease();
-        CheckDeath();
-
-        // แก้ไขจุดนี้: เปลี่ยนจาก Input.GetKeyDown เป็นระบบใหม่
-        if (Keyboard.current.iKey.wasPressedThisFrame)
+        if (characterStats.IsDead)
         {
-            ShowInventoryDebug();
+            if (!wasDeadLastFrame) // เรียก HandleDeath() แค่ครั้งเดียว
+            {
+                HandleDeath();
+                wasDeadLastFrame = true;
+            }
+            return;
         }
 
-        // ถ้าช่อง Cart UI ว่างอยู่ ให้ลองพยายามหาในฉากดู
+        wasDeadLastFrame = false;
+        characterStats.UpdateStatus(Time.deltaTime);
+        UpdateAllUI(); // <--- เพิ่มตรงนี้ ให้ UI อัพเดตตามสถานะทันที
+
+        // Handle inventory debug input
+        if (Keyboard.current.iKey.wasPressedThisFrame)
+        {
+            inventorySystem.DebugInventory();
+        }
+
+        // Auto-find CartUI if not assigned
         if (cartUI == null)
         {
-            // ค้นหาวัตถุที่มีสคริปต์ CartUI ในฉากปัจจุบัน
             cartUI = Object.FindFirstObjectByType<CartUI>();
         }
     }
@@ -68,218 +103,132 @@ public class PlayerStatus : MonoBehaviour
 
     public void AddItemToCart(ItemData item)
     {
-        cartList.Add(item);
-        if (cartUI != null) cartUI.RefreshCart(cartList);
-        Debug.Log($"<color=cyan>Cart:</color> เพิ่ม {item.itemName} ลงตะกร้า (รวม {cartList.Count} ชิ้น)");
+        inventorySystem.AddItemToCart(item);
+        if (cartUI != null) cartUI.RefreshCart(inventorySystem.CartList);
     }
 
     public void Checkout()
     {
-        int totalPrice = 0;
-        foreach (ItemData item in cartList)
-        {
-            totalPrice += item.price;
-        }
+        bool success = inventorySystem.Checkout(characterStats);
 
-        if (money >= totalPrice)
+        if (success)
         {
-            // --- กรณีเงินพอ (จ่ายได้) ---
-            money -= totalPrice;
-            foreach (ItemData item in cartList)
-            {
-                inventoryList.Add(item);
-            }
-            cartList.Clear(); // จ่ายแล้วล้างตะกร้า
-            Debug.Log("<color=green>Checkout สำเร็จ!</color>");
+            Debug.Log("เย้ ซื้อของสำเร็จ");
         }
         else
         {
-            // --- กรณีเงินไม่พอ (เงื่อนไขที่คุณต้องการ) ---
-            cartList.Clear(); // ลบของออกทั้งหมดทันที
-            if (cartUI != null) cartUI.RefreshCart(cartList);
-            Debug.Log("<color=red>เงินไม่พอ! ตะกร้าถูกล้างทิ้งทั้งหมด</color>");
+            Debug.Log("ว้า เงินไม่พอ");
         }
 
         UpdateAllUI();
-        // สั่งให้ UI ตะกร้าสะบัดของทิ้ง (Refresh ใหม่ตอนที่ List ว่างเปล่า)
         if (cartUI != null)
-        {
-            cartUI.RefreshCart(cartList);
-        }
-        SavePlayerData();
-    }
+            cartUI.RefreshCart(inventorySystem.CartList);
 
-    // --- Status Logic ---
-
-    void HandleStatusDecrease()
-    {
-        if (hunger > 0) hunger -= decreaseRate * Time.deltaTime;
-        if (water > 0) water -= decreaseRate * Time.deltaTime;
-
-        if (hungerSlider != null) hungerSlider.value = hunger;
-        if (waterSlider != null) waterSlider.value = water;
-    }
-
-    void CheckDeath()
-    {
-        if (hunger <= 0 || water <= 0) Die();
-    }
-
-    void Die()
-    {
-        isDead = true;
-
-        // 1. ปิด UI เลือด/หิว/น้ำ/เงิน (ถ้าไม่อยากให้เห็นเกะกะ)
-        // if (hungerSlider != null) hungerSlider.gameObject.SetActive(false);
-        // if (waterSlider != null) waterSlider.gameObject.SetActive(false);
-        // if (moneyText != null) moneyText.gameObject.SetActive(false);
-
-        // 2. ปิดหน้าต่างกระเป๋า (ถ้าเปิดค้างไว้)
-        var invManager = Object.FindFirstObjectByType<InventoryManager>();
-        if (invManager != null)
-        {
-            invManager.inventoryPanel.SetActive(false);
-            // อย่าลืมสั่งปลดล็อกเมาส์ให้ UI ตายกดปุ่ม Respawn ได้
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-
-        // 3. เปิดหน้าจอ GameOver
-        if (gameOverUI != null) gameOverUI.SetActive(true);
-
-        // 4. หยุดการเดิน
-        if (GetComponent<PlayerMovement>() != null) GetComponent<PlayerMovement>().enabled = false;
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-    }
-
-    public void ResetStatusForNewGame()
-
-    {
-
-        isDead = false;
-
-        hunger = 100f;
-
-        water = 100f;
-
-        money = 0;
-
-        cartList.Clear(); // ล้างตะกร้าด้วย
-
-        inventoryList.Clear(); // ล้างกระเป๋าด้วย
-
-
-
-        if (GetComponent<PlayerMovement>() != null) GetComponent<PlayerMovement>().enabled = true;
-
-        Cursor.lockState = CursorLockMode.Locked;
-
-        Cursor.visible = false;
-
-        UpdateAllUI();
-
+        inventorySystem.Save();
+        characterStats.Save();
     }
 
     // --- Public Methods (เรียกใช้จากสคริปต์อื่น) ---
 
     public void AddMoney(int amount)
     {
-        money += amount;
+        characterStats.AddMoney(amount);
         UpdateAllUI();
-        SavePlayerData();
-        Debug.Log("<color=yellow>Money:</color> ได้รับเงินเพิ่ม " + amount + " บาท");
+        characterStats.Save();
     }
 
     public void AddHunger(float amount)
     {
-        hunger = Mathf.Min(hunger + amount, 100f);
+        characterStats.AddHunger(amount);
         UpdateAllUI();
-        SavePlayerData();
-        Debug.Log($"<color=orange>Status:</color> กินอาหารเพิ่ม Hunger: {amount}");
+        characterStats.Save();
     }
 
     public void AddWater(float amount)
     {
-        water = Mathf.Min(water + amount, 100f);
+        characterStats.AddWater(amount);
         UpdateAllUI();
-        SavePlayerData();
-        Debug.Log($"<color=blue>Status:</color> ดื่มน้ำเพิ่ม Water: {amount}");
+        characterStats.Save();
     }
 
     public bool SpendMoney(int amount)
     {
-        if (money >= amount)
+        bool success = characterStats.SpendMoney(amount);
+        if (success)
         {
-            money -= amount;
             UpdateAllUI();
-            SavePlayerData();
-            return true;
+            characterStats.Save();
         }
-        return false;
+        return success; //return true/false
+    }
+
+    // --- Death & Reset ---
+
+    public void HandleDeath()
+    {
+        // Disable movement
+        if (playerMovement != null)
+            playerMovement.enabled = false;
+
+        // Close inventory if open
+        var invManager = Object.FindFirstObjectByType<InventoryManager>();
+        if (invManager != null)
+        {
+            invManager.InventoryPanel.SetActive(false);
+        }
+
+        // Show game over UI
+        if (gameOverUI != null)
+            gameOverUI.SetActive(true);
+
+        // Unlock cursor
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void ResetStatusForNewGame()
+    {
+        characterStats.ResetForNewGame();
+        inventorySystem.ClearAll();
+
+        // Re-enable movement
+        if (playerMovement != null)
+            playerMovement.enabled = true;
+
+        // Lock cursor
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        UpdateAllUI();
     }
 
     // --- UI & Data ---
 
     void UpdateAllUI()
     {
-        if (moneyText != null) moneyText.text = "Money: " + money + " Bath";
-        if (hungerSlider != null) hungerSlider.value = hunger;
-        if (waterSlider != null) waterSlider.value = water;
-    }
-
-    void ShowInventoryDebug()
-    {
-        Debug.Log("=== ในกระเป๋าของคุณมี ===");
-        if (inventoryList.Count == 0) Debug.Log("กระเป๋าว่างเปล่า");
-        foreach (ItemData item in inventoryList)
-        {
-            Debug.Log("- " + item.itemName);
-        }
+        characterStats.UpdateUI(hungerSlider, waterSlider, moneyText);
     }
 
     public void SavePlayerData()
     {
-        PlayerPrefs.SetInt("SavedMoney", money);
-        PlayerPrefs.SetFloat("SavedHunger", hunger);
-        PlayerPrefs.SetFloat("SavedWater", water);
-
-        // --- บันทึก Inventory ---
-        // สร้างลิสต์ของชื่อไอเทม เช่น "Oishi,Oishi,Bread"
-        List<string> itemNames = new List<string>();
-        foreach (ItemData item in inventoryList)
-        {
-            itemNames.Add(item.name); // เก็บชื่อไฟล์ ScriptableObject
-        }
-        string allItems = string.Join(",", itemNames); // รวมชื่อด้วยเครื่องหมายคอมม่า
-        PlayerPrefs.SetString("SavedInventory", allItems);
-
-        PlayerPrefs.Save();
+        characterStats.Save();
+        inventorySystem.Save();
     }
 
     public void LoadPlayerData()
     {
-        money = PlayerPrefs.GetInt("SavedMoney", 500);
-        hunger = PlayerPrefs.GetFloat("SavedHunger", 100f);
-        water = PlayerPrefs.GetFloat("SavedWater", 100f);
+        characterStats.Load();
+        inventorySystem.Load();
+    }
 
-        // --- โหลด Inventory ---
-        string savedItems = PlayerPrefs.GetString("SavedInventory", "");
-        inventoryList.Clear();
-
-        if (!string.IsNullOrEmpty(savedItems))
-        {
-            string[] names = savedItems.Split(',');
-            foreach (string itemName in names)
-            {
-                // ไปโหลดไฟล์ ItemData จากโฟลเดอร์ Resources/Items ตามชื่อที่เซฟไว้
-                ItemData loadedItem = Resources.Load<ItemData>("Items/" + itemName);
-                if (loadedItem != null)
-                {
-                    inventoryList.Add(loadedItem);
-                }
-            }
-        }
+    // ทริค Debug: แค่คลิกขวาที่ชื่อสคริปต์ PlayerStatus ใน Inspector แล้วกด "Debug: Clear Save" เซฟก็จะหายไปเลย!
+    [ContextMenu("Debug: Clear Save & Reset")]
+    public void DebugClearSave()
+    {
+        PlayerPrefs.DeleteAll();
+        characterStats.ResetForNewGame();
+        inventorySystem.ClearAll(); // ถ้ามีฟังก์ชันล้างกระเป๋า
+        UpdateAllUI();
+        Debug.LogWarning("ลบไฟล์เซฟทดสอบเรียบร้อย! เริ่มค่าใหม่ทั้งหมด");
     }
 }
