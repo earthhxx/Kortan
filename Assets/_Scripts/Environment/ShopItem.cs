@@ -9,8 +9,8 @@ public class ShopItem : MonoBehaviour
     [SerializeField] private ItemData itemData;
 
     [Header("=== 2. UI References ===")]
-    [SerializeField] private GameObject interactUI;
-    [SerializeField] private TextMeshProUGUI promptText;
+    [SerializeField] private GameObject interactUI; // ลากแผ่นป้าย BG (interactive) มาใส่
+    [SerializeField] private TextMeshProUGUI promptText; // ลากตัวหนังสือ (food_text) มาใส่
 
     [Header("=== 3. Interaction Settings ===")]
     [SerializeField] private Key interactKey = Key.E;
@@ -27,6 +27,9 @@ public class ShopItem : MonoBehaviour
 
     void Start()
     {
+        // ปิดข้อความไว้ก่อนตอนเริ่มเกม จะได้ไม่ไปตีกับ Checkout
+        if (promptText != null) promptText.gameObject.SetActive(false);
+        
         // Cache player reference
         cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStatus>();
     }
@@ -58,11 +61,15 @@ public class ShopItem : MonoBehaviour
         {
             isPlayerNearby = true;
 
-            if (interactUI != null)
-                interactUI.SetActive(true);
+            // 1. เปิดแผ่นป้าย BG
+            if (interactUI != null) interactUI.SetActive(true);
 
+            // 2. เปิดเฉพาะข้อความของสินค้าชิ้นนี้
             if (promptText != null)
+            {
+                promptText.gameObject.SetActive(true);
                 promptText.text = $"[E] เก็บ {itemData.itemName} ({itemData.price} บาท)";
+            }
 
             Debug.Log($"<color=cyan>Shop:</color> เข้าใกล้ {itemData.itemName}");
         }
@@ -77,8 +84,11 @@ public class ShopItem : MonoBehaviour
         {
             isPlayerNearby = false;
 
-            if (interactUI != null)
-                interactUI.SetActive(false);
+            // ปิดแผ่นป้าย BG
+            if (interactUI != null) interactUI.SetActive(false);
+
+            // ปิดข้อความของตัวเองด้วย เผื่อเดินไปเข้าโซนอื่นต่อมันจะได้ไม่ค้าง
+            if (promptText != null) promptText.gameObject.SetActive(false);
 
             Debug.Log("<color=cyan>Shop:</color> ห่างจากสินค้า");
         }
