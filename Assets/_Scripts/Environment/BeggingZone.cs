@@ -3,21 +3,34 @@ using System.Collections;
 
 public class BeggingZone : MonoBehaviour
 {
-    [Header("Settings")]
-    public GameObject moneyPrefab; // ลาก Prefab เหรียญมาใส่ที่นี่
-    public Transform spawnPoint;   // ลาก SpawnPoint มาใส่ที่นี่
-    public float minWait = 3f;     // สุ่มรออย่างน้อย 3 วิ
-    public float maxWait = 10f;    // สุ่มรอไม่เกิน 10 วิ
+    // === 1. Static Data (ตั้งค่าใน Inspector) ===
+    [Header("=== 1. Spawn Settings ===")]
+    [SerializeField] private GameObject moneyPrefab;
+    [SerializeField] private Transform spawnPoint;
 
-    private bool isPlayerInZone = false;
+    [Header("=== 2. Timing ===")]
+    [SerializeField] private float minWaitTime = 3f;
+    [SerializeField] private float maxWaitTime = 10f;
+
+    [Header("=== 3. Spawn Randomization ===")]
+    [SerializeField] private float spawnRadius = 0.5f;
+
+    // === 2. Runtime Data (ข้อมูลตอนเล่น) ===
+    [System.NonSerialized] private bool isPlayerInZone = false;
+    [System.NonSerialized] private Coroutine spawnRoutine;
+
+    // === 3. Properties ===
+    public bool IsPlayerInZone => isPlayerInZone;
+
+    // === 4. Lifecycle ===
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
             isPlayerInZone = true;
-            Debug.Log("เริ่มนั่งขอทาน...");
-            StartCoroutine(SpawnMoneyRoutine());
+            spawnRoutine = StartCoroutine(SpawnMoneyRoutine());
+            Debug.Log("<color=yellow>BeggingZone:</color> เริ่มนั่งขอทาน...");
         }
     }
 
@@ -26,32 +39,51 @@ public class BeggingZone : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             isPlayerInZone = false;
-            Debug.Log("ลุกจากที่ขอทาน");
-            StopAllCoroutines(); // หยุดสุ่มเงินทันทีที่ลุก
+            
+            if (spawnRoutine != null)
+            {
+                StopCoroutine(spawnRoutine);
+                spawnRoutine = null;
+            }
+            
+            Debug.Log("<color=yellow>BeggingZone:</color> ลุกจากที่ขอทาน");
         }
     }
 
-    IEnumerator SpawnMoneyRoutine()
+    /// <summary>
+    /// Spawn money at random intervals while player is in zone
+    /// </summary>
+    private IEnumerator SpawnMoneyRoutine()
     {
         while (isPlayerInZone)
         {
-            float waitTime = Random.Range(minWait, maxWait);
+            float waitTime = Random.Range(minWaitTime, maxWaitTime);
             yield return new WaitForSeconds(waitTime);
 
-            if (isPlayerInZone && moneyPrefab != null && spawnPoint != null)
+            if (isPlayerInZone)
             {
-                // --- เพิ่มส่วนการสุ่มตำแหน่ง (Random Offset) ---
-                // สุ่มค่า X และ Z รอบๆ จุดเกิดในรัศมี 0.5 หน่วย
-                float randomX = Random.Range(-0.5f, 0.5f);
-                float randomZ = Random.Range(-0.5f, 0.5f);
-                Vector3 spawnPos = spawnPoint.position + new Vector3(randomX, 0, randomZ);
-
-                // เสกเหรียญตามตำแหน่งที่สุ่มได้
-                Instantiate(moneyPrefab, spawnPos, Quaternion.identity);
-                // -------------------------------------------
-
-                Debug.Log("มีคนโยนเงินให้แล้ว!");
+                SpawnMoney();
             }
         }
+    }
+
+    /// <summary>
+    /// Spawn money at random position near spawn point
+    /// </summary>
+    private void SpawnMoney()
+    {
+        if (moneyPrefab == null || spawnPoint == null)
+        {
+            Debug.LogError("<color=red>BeggingZone:</color> moneyPrefab หรือ spawnPoint ไม่ได้ถูกตั้งค่า!");
+            return;
+        }
+
+        // Random offset
+        float randomX = Random.Range(-spawnRadius, spawnRadius);
+        float randomZ = Random.Range(-spawnRadius, spawnRadius);
+        Vector3 spawnPos = spawnPoint.position + new Vector3(randomX, 0, randomZ);
+
+        Instantiate(moneyPrefab, spawnPos, Quaternion.identity);
+        Debug.Log("<color=yellow>BeggingZone:</color> มีคนโยนเงินให้");
     }
 }
