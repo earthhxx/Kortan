@@ -25,6 +25,7 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
         if (eventData.clickCount == 2) // Double click
         {
             UseItem();
+            Debug.Log($"<color=magenta>InventorySlot:</color> Double-clicked on {item.itemName}");
         }
     }
 
@@ -55,8 +56,14 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
             // Refresh UI
             if (inventoryManager != null)
                 inventoryManager.RefreshInventory();
-
-            Debug.Log($"<color=yellow>ใช้ {item.itemName} แล้ว!</color> ค่าที่ฟื้นฟู: {item.restoreAmount}");
+            // if (item.type == ItemData.ItemType.Food || item.type == ItemData.ItemType.Water)
+            // {
+            //     Debug.Log($"<color=yellow>ใช้ {item.itemName} แล้ว!</color> ค่าที่ฟื้นฟู: {item.restoreAmount}");
+            // }
+            // else if (item.type == ItemData.ItemType.Equipment)
+            // {
+            //     playerStatus.EquipWinterCoat(14); // สมมติใส่แล้วอยู่ได้ 14 วัน
+            // }
         }
         else
         {

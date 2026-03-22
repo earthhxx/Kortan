@@ -189,7 +189,7 @@ public class PlayerStatus : MonoBehaviour
         System.DateTime expiryDate = timeManager.currentTime.AddDays(daysToLast);
         coatExpiryString = expiryDate.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
 
-        Debug.Log($"<color=cyan>Item:</color> ใส่เสื้อกันหนาวแล้ว! จะพังในวันที่: {expiryDate.ToString("dd MMMM yyyy")}");
+        Debug.Log($"<color=cyan>Item:</color> ใส่เสื้อกันหนาวแล้ว! จะพังในวันที่: {expiryDate.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}");
         SavePlayerData(); // บังคับเซฟทันที
     }
 

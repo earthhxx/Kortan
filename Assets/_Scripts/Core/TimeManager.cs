@@ -105,7 +105,7 @@ public class TimeManager : MonoBehaviour
         {
             // เซตข้อความวันที่ใน UI ให้ตรงกับปัจจุบัน
             if (dayPassText != null)
-                dayPassText.text = currentTime.ToString("dd MMMM yyyy");
+                dayPassText.text = currentTime.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
             // เปิด UI
             dayPassPanel.SetActive(true);
