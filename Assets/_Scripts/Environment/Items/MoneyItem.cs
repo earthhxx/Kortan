@@ -15,7 +15,7 @@ public class MoneyItem : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            PlayerStatus status = other.GetComponent<PlayerStatus>();
+            PlayerManager status = other.GetComponent<PlayerManager>();
             if (status != null)
             {
                 status.AddMoney(amount);

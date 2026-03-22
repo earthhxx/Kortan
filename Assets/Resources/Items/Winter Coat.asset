@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Winter Coat
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemName: Winter Coat
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 11adf6b233919a148a44b92b5a11faab, type: 3}
   price: 500
   type: 2
   restoreAmount: 0

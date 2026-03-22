@@ -15,7 +15,7 @@ public class InventoryManager : MonoBehaviour
 
     // === 2. Runtime Data (ข้อมูลตอนเล่น - ซ่อนจาก Inspector) ===
     [System.NonSerialized] private bool isOpen = false;
-    [System.NonSerialized] private PlayerStatus cachedPlayer;
+    [System.NonSerialized] private PlayerManager cachedPlayer;
 
     // === 3. Properties (ทำให้โค้ดสะอาด) ===
     public bool IsOpen => isOpen;
@@ -27,7 +27,7 @@ public class InventoryManager : MonoBehaviour
     {
         inventoryPanel.SetActive(false);
         // Cache PlayerStatus reference เพื่อไม่ต้องเรียก FindGameObject ทุก frame
-        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStatus>();
+        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerManager>();
 
         if (cachedPlayer == null)
         {

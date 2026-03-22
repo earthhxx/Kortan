@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
-public class PlayerStatus : MonoBehaviour
+public class PlayerManager : MonoBehaviour
 {
     //import CharacterStats และ InventorySystem มาเป็นส่วนประกอบหลักของ PlayerStatus
     [Header("Player Systems")]

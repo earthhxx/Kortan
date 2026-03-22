@@ -17,7 +17,7 @@ public class ShopItem : MonoBehaviour
 
     // === 2. Runtime Data (ข้อมูลตอนเล่น) ===
     [System.NonSerialized] private bool isPlayerNearby = false;
-    [System.NonSerialized] private PlayerStatus cachedPlayer;
+    [System.NonSerialized] private PlayerManager cachedPlayer;
 
     // === 3. Properties ===
     public ItemData ItemData => itemData;
@@ -31,7 +31,7 @@ public class ShopItem : MonoBehaviour
         if (promptText != null) promptText.gameObject.SetActive(false);
         
         // Cache player reference
-        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStatus>();
+        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerManager>();
     }
 
     void Update()

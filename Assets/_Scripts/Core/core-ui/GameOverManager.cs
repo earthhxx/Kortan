@@ -29,7 +29,7 @@ public class GameOverManager : MonoBehaviour
         // 3. จัดการตัวละคร Player
         // ใช้ FindFirstObjectByType แทน Find เฉยๆ จะเร็วกว่าใน Unity รุ่นใหม่ครับ
         // ระบุไปเลยว่าเป็น UnityEngine.Object
-        PlayerStatus player = UnityEngine.Object.FindFirstObjectByType<PlayerStatus>();
+        PlayerManager player = UnityEngine.Object.FindFirstObjectByType<PlayerManager>();
         if (player != null)
         {
             player.ResetStatusForNewGame();

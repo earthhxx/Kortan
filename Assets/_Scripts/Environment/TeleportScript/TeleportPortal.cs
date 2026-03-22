@@ -9,7 +9,7 @@ public class TeleportPortal : MonoBehaviour
     public GameObject interactUI;
 
     private bool canTeleport = false;
-    private PlayerStatus cachedPlayer;
+    private PlayerManager cachedPlayer;
 
     void Update()
     {
@@ -34,7 +34,7 @@ public class TeleportPortal : MonoBehaviour
         {
             canTeleport = true;
             // จำข้อมูล Player เอาไว้ เผื่อต้องใช้เทตะกร้า
-            cachedPlayer = other.GetComponent<PlayerStatus>(); 
+            cachedPlayer = other.GetComponent<PlayerManager>(); 
             
             if (interactUI != null) interactUI.SetActive(true);
         }

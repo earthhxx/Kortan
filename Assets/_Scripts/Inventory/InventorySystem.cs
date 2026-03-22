@@ -56,7 +56,7 @@ public class InventorySystem : ScriptableObject
     /// Use item from inventory
     /// </summary>
   // เปลี่ยนพารามิเตอร์เป็น PlayerStatus player (ตามที่เราคุยกันไปก่อนหน้านี้)
-    public bool UseItem(ItemData item, PlayerStatus player)
+    public bool UseItem(ItemData item, PlayerManager player)
     {
         if (!inventoryList.Contains(item))
             return false;
