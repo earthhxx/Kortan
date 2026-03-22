@@ -30,6 +30,7 @@ public class PlayerStatus : MonoBehaviour
 
     [Header("Survival Settings")]
     public bool hasWinterCoat = false; // สวิตช์เช็กเสื้อกันหนาว
+    public string coatExpiryString = ""; // เก็บวันที่เสื้อพังเป็น String เพื่อให้เซฟง่ายๆ
 
     // Private fields
     private bool wasDeadLastFrame = false;
@@ -92,7 +93,7 @@ public class PlayerStatus : MonoBehaviour
         wasDeadLastFrame = false;
         characterStats.UpdateStatus(Time.deltaTime);
         UpdateAllUI(); // <--- เพิ่มตรงนี้ ให้ UI อัพเดตตามสถานะทันที
-
+        CheckCoatDurability(); // เช็กสภาพเสื้อกันหนาวทุกเฟรม
         // Handle inventory debug input
         if (Keyboard.current.iKey.wasPressedThisFrame)
         {
@@ -156,16 +157,6 @@ public class PlayerStatus : MonoBehaviour
     }
 
     // --- Survival Logic (เรียกจาก TimeManager) ---
-
-    public void TakeDamage(float amount)
-    {
-        if (characterStats != null)
-        {
-            characterStats.AddHunger(-amount); // หนาวมากจนหิว/หมดแรง
-            UpdateAllUI();
-        }
-    }
-
     public void UpdateCold(float amount)
     {
         if (characterStats != null)
@@ -187,6 +178,37 @@ public class PlayerStatus : MonoBehaviour
         characterStats.AddWater(amount);
         UpdateAllUI();
         characterStats.Save();
+    }
+
+    // เรียกใช้ตอนกดซื้อหรือกดใช้เสื้อ
+    public void EquipWinterCoat(int daysToLast)
+    {
+        hasWinterCoat = true;
+
+        // คำนวณวันหมดอายุ = เวลาในเกมปัจจุบัน + จำนวนวันที่กำหนด (14 วัน)
+        System.DateTime expiryDate = timeManager.currentTime.AddDays(daysToLast);
+        coatExpiryString = expiryDate.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+
+        Debug.Log($"<color=cyan>Item:</color> ใส่เสื้อกันหนาวแล้ว! จะพังในวันที่: {expiryDate.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}");
+        SavePlayerData(); // บังคับเซฟทันที
+    }
+
+    // ฟังก์ชันสำหรับเช็กว่าเสื้อพังหรือยัง
+    private void CheckCoatDurability()
+    {
+        if (hasWinterCoat && !string.IsNullOrEmpty(coatExpiryString))
+        {
+            System.DateTime expiryDate = System.DateTime.Parse(coatExpiryString, null, System.Globalization.DateTimeStyles.RoundtripKind);
+
+            // ถ้าเวลาปัจจุบัน เลยเวลาหมดอายุของเสื้อไปแล้ว
+            if (timeManager.currentTime >= expiryDate)
+            {
+                hasWinterCoat = false;
+                coatExpiryString = "";
+                Debug.LogWarning("<color=red>System:</color> เสื้อกันหนาวของคุณพังแล้ว! ขาดรุ่ยทนความหนาวไม่ได้อีกต่อไป");
+                SavePlayerData();
+            }
+        }
     }
 
     // --- Death & Reset ---
@@ -243,6 +265,8 @@ public class PlayerStatus : MonoBehaviour
         characterStats.Save();
         inventorySystem.Save();
         timeManager?.SaveTime();
+        PlayerPrefs.SetInt("SavedHasCoat", hasWinterCoat ? 1 : 0);
+        PlayerPrefs.SetString("SavedCoatExpiry", coatExpiryString);
     }
 
     public void LoadPlayerData()
@@ -250,6 +274,8 @@ public class PlayerStatus : MonoBehaviour
         characterStats.Load();
         inventorySystem.Load();
         timeManager?.LoadTime();
+        hasWinterCoat = PlayerPrefs.GetInt("SavedHasCoat", 0) == 1;
+        coatExpiryString = PlayerPrefs.GetString("SavedCoatExpiry", "");
     }
 
     // ==========================================

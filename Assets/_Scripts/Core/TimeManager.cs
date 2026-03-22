@@ -105,7 +105,7 @@ public class TimeManager : MonoBehaviour
         {
             // เซตข้อความวันที่ใน UI ให้ตรงกับปัจจุบัน
             if (dayPassText != null)
-                dayPassText.text = currentTime.ToString("dd MMMM yyyy");
+                dayPassText.text = currentTime.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
             // เปิด UI
             dayPassPanel.SetActive(true);
@@ -128,22 +128,31 @@ public class TimeManager : MonoBehaviour
 
         if (isColdTime)
         {
-            // ถ้าไม่มีเสื้อกันหนาว ความหนาวจะเพิ่มขึ้นเรื่อยๆ
-            float coldIncrease = player.hasWinterCoat ? 0.5f : 5.0f; // มีเสื้อเพิ่มช้าลง, ไม่มีเพิ่มเร็ว
-            player.UpdateCold(coldIncrease * Time.deltaTime);
+            if (player.hasWinterCoat)
+            {
+                // --- มีเสื้อกันหนาว ---
+                if (player.cold < 50f)
+                {
+                    // ถ้ายังไม่ถึง 50 ให้เพิ่มช้าๆ
+                    player.UpdateCold(0.5f * Time.deltaTime);
+                }
+                else if (player.cold > 50f)
+                {
+                    // ถ้าหนาวเกิน 50 ไปแล้ว (เช่น เพิ่งซื้อเสื้อมาใส่ตอนที่หนาวจัด) 
+                    // ให้ความหนาวค่อยๆ ลดลงมาหยุดที่ 50
+                    player.UpdateCold(-2.0f * Time.deltaTime);
+                }
+            }
+            else
+            {
+                // --- ไม่มีเสื้อกันหนาว ---
+                player.UpdateCold(5.0f * Time.deltaTime); // หนาวขึ้นเร็วมาก ทะลุ 100 ได้
+            }
         }
         else
         {
-            // ถ้าเป็นตอนกลางวัน ความหนาวจะค่อยๆ ลดลงเอง (ร่างกายอุ่นขึ้น)
+            // กลางวัน ความหนาวลดลงปกติ
             player.UpdateCold(-2.0f * Time.deltaTime);
-        }
-
-        // --- ส่วนตัดสินชีวิต ---
-        // ถ้าความหนาวเต็ม 100 ให้เริ่มลดเลือด (HP) หรือลด Hunger แทนตามที่คุณตั้งไว้
-        if (player.cold >= 100f)
-        {
-            player.TakeDamage(2f * Time.deltaTime); // หนาวตาย!
-            if (UnityEngine.Random.value < 0.01f) Debug.Log("<color=red>Hypothermia!</color> ตัวแข็งแล้ว เลือดลดรัวๆ");
         }
     }
 
