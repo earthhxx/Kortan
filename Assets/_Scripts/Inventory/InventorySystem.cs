@@ -55,18 +55,30 @@ public class InventorySystem : ScriptableObject
     /// <summary>
     /// Use item from inventory
     /// </summary>
-    public bool UseItem(ItemData item, CharacterStats stats)
+  // เปลี่ยนพารามิเตอร์เป็น PlayerStatus player (ตามที่เราคุยกันไปก่อนหน้านี้)
+    public bool UseItem(ItemData item, PlayerStatus player)
     {
         if (!inventoryList.Contains(item))
             return false;
 
-        // Apply item effects
-        if (item.type == ItemData.ItemType.Food)
-            stats.AddHunger(item.restoreAmount);
-        else if (item.type == ItemData.ItemType.Water)
-            stats.AddWater(item.restoreAmount);
+        // แยกการทำงานตามหมวดหมู่ไอเทม!
+        switch (item.type)
+        {
+            case ItemData.ItemType.Food:
+                player.CharacterStats.AddHunger(item.restoreAmount);
+                break;
 
-        // Remove from inventory
+            case ItemData.ItemType.Water:
+                player.CharacterStats.AddWater(item.restoreAmount);
+                break;
+
+            case ItemData.ItemType.Equipment:
+                // สั่งให้ Player ใส่เสื้อ (และเริ่มนับถอยหลัง 14 วัน)
+                player.EquipWinterCoat(14);
+                break;
+        }
+
+        // ลบไอเทมออกจากกระเป๋า (เพราะกินไปแล้ว หรือเอาไปใส่บนตัวแล้ว)
         inventoryList.Remove(item);
         return true;
     }

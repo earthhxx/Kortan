@@ -48,7 +48,7 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
         }
 
         // Use item through inventory system
-        bool success = playerStatus.InventorySystem.UseItem(item, playerStatus.CharacterStats);
+        bool success = playerStatus.InventorySystem.UseItem(item, playerStatus);
 
         if (success)
         {

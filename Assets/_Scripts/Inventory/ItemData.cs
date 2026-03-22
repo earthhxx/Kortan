@@ -7,8 +7,8 @@ public class ItemData : ScriptableObject
     public string itemName;
     public Sprite icon;          // รูปที่จะโชว์ใน Inventory
     public int price;
-    
-    public enum ItemType { Food, Water, Other }
+
+    public enum ItemType { Food, Water, Equipment, Other }
     public ItemType type;
 
     public float restoreAmount;  // ค่าที่เพิ่มความหิว/น้ำ
