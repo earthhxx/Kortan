@@ -2,15 +2,15 @@ using UnityEngine;
 
 public class SettingController : MonoBehaviour
 {
-    public enum CameraMode { FPS, Isometric }
+    public enum CameraMode { FirstPerson, Isometric }
     public enum MovementMode { WASD, ClickToMove }
 
     [Header("Current Settings")]
-    public CameraMode currentCamMode = CameraMode.FPS;
+    public CameraMode currentCamMode = CameraMode.FirstPerson;
     public MovementMode currentMoveMode = MovementMode.WASD;
 
     [Header("Camera References")]
-    public GameObject fpsCamera;
+    public GameObject firstPersonCamera;
     public GameObject isometricCamera;
 
     [Header("Movement References")]
@@ -23,14 +23,14 @@ public class SettingController : MonoBehaviour
     public void SetCameraMode(CameraMode mode)
     {
         currentCamMode = mode;
-        if (mode == CameraMode.FPS)
+        if (mode == CameraMode.FirstPerson)
         {
-            if (fpsCamera != null) fpsCamera.SetActive(true);
+            if (firstPersonCamera != null) firstPersonCamera.SetActive(true);
             if (isometricCamera != null) isometricCamera.SetActive(false);
         }
         else if (mode == CameraMode.Isometric)
         {
-            if (fpsCamera != null) fpsCamera.SetActive(false);
+            if (firstPersonCamera != null) firstPersonCamera.SetActive(false);
             if (isometricCamera != null) isometricCamera.SetActive(true);
         }
     }
