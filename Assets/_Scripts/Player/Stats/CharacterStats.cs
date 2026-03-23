@@ -7,18 +7,18 @@ public class CharacterStats : ScriptableObject
 {
     [Header("=== 1. Factory Settings (ค่าเริ่มต้น/เพดานสูงสุด) ===")]
     [SerializeField] private int startingMoney = 200;
-    
+
     [Space(5)]
     [SerializeField] private float maxHunger = 100f;
-    [SerializeField] private float startingHunger = 100f; 
-    
+    [SerializeField] private float startingHunger = 100f;
+
     [Space(5)]
     [SerializeField] private float maxWater = 100f;
     [SerializeField] private float startingWater = 100f;
-    
+
     [Space(5)]
     [SerializeField] private float maxCold = 100f;
-    [SerializeField] private float startingCold = 0f;  
+    [SerializeField] private float startingCold = 0f;
 
     [Space(5)]
     [SerializeField] private float decreaseRate = 1.0f;
@@ -69,10 +69,10 @@ public class CharacterStats : ScriptableObject
     /// </summary>
     public void ResetForNewGame()
     {
-        currentHunger = startingHunger; 
-        currentWater = startingWater;   
+        currentHunger = startingHunger;
+        currentWater = startingWater;
         currentMoney = startingMoney;
-        currentCold = startingCold;    
+        currentCold = startingCold;
         isDead = false;
         Debug.Log("<color=green>Stats Reset:</color> เริ่มต้นใหม่ด้วยค่า Starting!");
     }
@@ -109,10 +109,23 @@ public class CharacterStats : ScriptableObject
 
     public void UpdateUI(Slider hungerSlider, Slider waterSlider, Slider coldSlider, TextMeshProUGUI moneyText)
     {
-        if (hungerSlider != null) hungerSlider.value = currentHunger;
-        if (waterSlider != null) waterSlider.value = currentWater;
-        if (coldSlider != null) coldSlider.value = currentCold;
-        if (moneyText != null) moneyText.text = $"Money: {currentMoney} Bath";
+        // ทริคโปร: บังคับเซ็ตค่า maxValue ของหลอด UI ให้ตรงกับโค้ดเสมอ ป้องกันหลอดบัค!
+        if (hungerSlider != null)
+        {
+            hungerSlider.maxValue = maxHunger;
+            hungerSlider.value = currentHunger;
+        }
+        if (waterSlider != null)
+        {
+            waterSlider.maxValue = maxWater;
+            waterSlider.value = currentWater;
+        }
+        if (coldSlider != null)
+        {
+            coldSlider.maxValue = maxCold;
+            coldSlider.value = currentCold;
+        }
+        if (moneyText != null) moneyText.text = $"Money: {currentMoney} Baht"; // แอบแก้ Bath เป็น Baht ให้ครับ อิอิ
     }
 
     // === 4. Save/Load ===
@@ -127,16 +140,20 @@ public class CharacterStats : ScriptableObject
 
     public void Load()
     {
-        if (PlayerPrefs.HasKey("SavedMoney"))
+        // แอบดึงค่าความหิวมาเช็กก่อน ถ้าเป็น 0 แปลว่าตายไปแล้วหรือเซฟบัค ให้เริ่มเกมใหม่ไปเลย
+        float checkHunger = PlayerPrefs.GetFloat("SavedHunger", 0);
+
+        if (PlayerPrefs.HasKey("SavedMoney") && checkHunger > 0)
         {
             currentHunger = PlayerPrefs.GetFloat("SavedHunger");
             currentWater = PlayerPrefs.GetFloat("SavedWater");
             currentCold = PlayerPrefs.GetFloat("SavedCold");
             currentMoney = PlayerPrefs.GetInt("SavedMoney");
+            Debug.Log("<color=yellow>Stats Loaded:</color> โหลดข้อมูลเซฟเดิมสำเร็จ!");
         }
         else
         {
-            ResetForNewGame();
+            ResetForNewGame(); // ถ้าหาเซฟไม่เจอ หรือโหลดมาแล้วหิวตาย ให้รีเซ็ตค่าเป็นหลอดเต็ม
         }
     }
 }

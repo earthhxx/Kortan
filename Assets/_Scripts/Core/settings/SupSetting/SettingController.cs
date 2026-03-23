@@ -14,10 +14,11 @@ public class SettingController : MonoBehaviour
     public GameObject isometricCamera;
 
     [Header("Movement References")]
-    // ลากสคริปต์เดินแบบ WASD มาใส่ (ตัวแปร MonoBehaviour รับได้ทุกสคริปต์)
-    public MonoBehaviour wasdMovementScript; 
-    // ลากสคริปต์เดินแบบคลิกจอ (NavMesh) มาใส่
-    public MonoBehaviour clickMovementScript; 
+    // เปลี่ยนจาก MonoBehaviour เป็นชื่อสคริปต์ของเราตรงๆ เลยครับ!
+    public PlayerMovement wasdMovementScript;
+
+    // ตรงนี้ผมสมมติว่าสคริปต์เดินคลิกจอคุณชื่อนี้นะครับ ถ้าชื่ออื่นก็เปลี่ยนให้ตรงกัน
+    public PlayerClickToMove clickMovementScript;
 
     // สั่งเปลี่ยนกล้อง
     public void SetCameraMode(CameraMode mode)
@@ -60,15 +61,16 @@ public class SettingController : MonoBehaviour
 
     public void LoadSettings()
     {
-        // โหลดกลับมาเป็น Enum (ค่า Default คือ 0 หรือแบบแรกสุด)
-        currentCamMode = (CameraMode)PlayerPrefs.GetInt("Set_CamMode", 0);
-        currentMoveMode = (MovementMode)PlayerPrefs.GetInt("Set_MoveMode", 0);
+        // ไฮไลต์อยู่ตรงนี้ครับ! เราใช้ (int)currentCamMode เป็นค่า Default แทนเลข 0
+        // แปลว่า: "ถ้าหาเซฟไม่เจอ ให้เอาค่าที่ตั้งไว้ในหน้า Inspector มาใช้แทนซะ!"
+        currentCamMode = (CameraMode)PlayerPrefs.GetInt("Set_CamMode", (int)currentCamMode);
+        currentMoveMode = (MovementMode)PlayerPrefs.GetInt("Set_MoveMode", (int)currentMoveMode);
 
         // นำค่าที่โหลดมาไปใช้งานจริงทันที
         SetCameraMode(currentCamMode);
         SetMovementMode(currentMoveMode);
     }
-    
+
     // ไว้ใช้ผูกกับปุ่ม UI Dropdown
     public void ChangeCameraFromDropdown(int index)
     {
