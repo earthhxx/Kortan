@@ -36,7 +36,7 @@ public class SettingController : MonoBehaviour
         }
     }
 
-    // สั่งเปลี่ยนระบบเดิน
+    // สั่งเปลี่ยนระบบเดิน และจัดการลูกศรเมาส์
     public void SetMovementMode(MovementMode mode)
     {
         currentMoveMode = mode;
@@ -44,11 +44,19 @@ public class SettingController : MonoBehaviour
         {
             if (wasdMovementScript != null) wasdMovementScript.enabled = true;
             if (clickMovementScript != null) clickMovementScript.enabled = false;
+
+            // --- โหมด FPS: ซ่อนเมาส์ และล็อกไว้กึ่งกลางจอ ---
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
         else if (mode == MovementMode.ClickToMove)
         {
             if (wasdMovementScript != null) wasdMovementScript.enabled = false;
             if (clickMovementScript != null) clickMovementScript.enabled = true;
+
+            // --- โหมด Isometric: ปล่อยเมาส์ให้เป็นอิสระ และโชว์ลูกศร ---
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 
