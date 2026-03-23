@@ -4612,7 +4612,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1279543847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5869,7 +5869,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SettingController
   currentCamMode: 0
   currentMoveMode: 0
-  fpsCamera: {fileID: 1350603220}
+  firstPersonCamera: {fileID: 1350603220}
   isometricCamera: {fileID: 1279543846}
   wasdMovementScript: {fileID: 0}
   clickMovementScript: {fileID: 0}
