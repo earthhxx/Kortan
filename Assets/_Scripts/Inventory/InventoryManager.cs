@@ -61,25 +61,43 @@ public class InventoryManager : MonoBehaviour
         isOpen = !isOpen;
         inventoryPanel.SetActive(isOpen);
 
-        // Get player movement component
+        // Get movement scripts and settings
         PlayerMovement movementScript = cachedPlayer?.GetComponent<PlayerMovement>();
+        PlayerClickToMove clickMovementScript = cachedPlayer?.GetComponent<PlayerClickToMove>();
+        SettingController settings = Object.FindFirstObjectByType<SettingController>();
 
         if (isOpen)
         {
-            // Open inventory: unlock cursor & disable movement
+            // --- ตอนเปิดกระเป๋า ---
+            // 1. ปล่อยเมาส์ให้เป็นอิสระเสมอ เพื่อให้เอาไปคลิกของได้
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-            if (movementScript != null) movementScript.enabled = false;
-            RefreshInventory();
 
+            // 2. ปิดสคริปต์เดิน (เพื่อไม่ให้ตัวละครขยับตอนเราจัดของ)
+            if (movementScript != null) movementScript.enabled = false;
+            if (clickMovementScript != null) clickMovementScript.enabled = false;
+
+            RefreshInventory();
             Debug.Log("<color=yellow>Inventory:</color> เปิดกระเป๋า");
         }
         else
         {
-            // Close inventory: lock cursor & enable movement
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            if (movementScript != null) movementScript.enabled = true;
+            // --- ตอนปิดกระเป๋า ---
+            // 1. เช็กโหมดปัจจุบันจาก SettingController
+            if (settings != null && settings.currentMoveMode == SettingController.MovementMode.WASD)
+            {
+                // ถ้าเป็นโหมด FPS (WASD) -> เปิดสคริปต์เดิน WASD และ "ล็อกเมาส์+ซ่อนเมาส์"
+                if (movementScript != null) movementScript.enabled = true;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            else
+            {
+                // ถ้าเป็นโหมด Isometric (หรือหา Setting ไม่เจอ) -> เปิดสคริปต์เดินคลิก และ "ปล่อยเมาส์โชว์ไว้"
+                if (clickMovementScript != null) clickMovementScript.enabled = true;
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
 
             Debug.Log("<color=yellow>Inventory:</color> ปิดกระเป๋า");
         }

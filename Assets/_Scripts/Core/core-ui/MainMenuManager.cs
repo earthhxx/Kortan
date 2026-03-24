@@ -18,10 +18,6 @@ public class MainMenuManager : MonoBehaviour
         Debug.Log("กำลังเรียก GameManagerUtils.ClearAllDDOL()...");
         GameManagerUtils.ClearAllDDOL();
 
-        // 3. ตั้งค่าเมาส์
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         // 4. โหลดฉาก
         Debug.Log("<color=green>SceneManager:</color> กำลังโหลดฉาก 02_MainCity...");
         SceneManager.LoadScene("02_MainCity");
@@ -34,9 +30,6 @@ public class MainMenuManager : MonoBehaviour
         Time.timeScale = 1f;
 
         GameManagerUtils.ClearAllDDOL();
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
 
         Debug.Log("<color=green>SceneManager:</color> กำลังโหลดฉาก 02_MainCity...");
         SceneManager.LoadScene("02_MainCity");

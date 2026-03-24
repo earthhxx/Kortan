@@ -5,34 +5,72 @@ using UnityEngine.InputSystem;
 public class PlayerClickToMove : MonoBehaviour
 {
     private NavMeshAgent agent;
+    private Camera mainCam;
+
+    [Header("ตั้งค่าเลเซอร์")]
+    [Tooltip("เลือก Layer พื้นดิน เลเซอร์จะทะลุตึกไปโดนพื้นแทน")]
+    public LayerMask groundLayer;
+
+    [Header("ตั้งค่าการเดินค้าง")]
+    [Tooltip("ระยะห่างที่ต้องขยับเมาส์ ก่อนจะสั่งคำนวณเส้นทางใหม่")]
+    public float updateThreshold = 0.5f; // เปลี่ยนแปลงได้ตามความลื่นไหลที่ชอบ
+    private Vector3 lastDestination;     // เก็บพิกัดเป้าหมายล่าสุด
 
     void Start()
     {
-        // ดึงคอมโพเนนต์สมอง AI (NavMeshAgent) จากตัว Player มาใช้งาน
         agent = GetComponent<NavMeshAgent>();
     }
 
     void Update()
     {
-        // เช็กว่ามีการคลิกเมาส์ซ้าย (หรือจิ้มจอ) ในเฟรมนี้ไหม
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (!enabled) return;
+
+        bool isClickThisFrame = false;
+        bool isHeld = false;
+        Vector2 screenPos = Vector2.zero;
+
+        // --- 1. เช็กเมาส์ (PC) ---
+        if (Mouse.current != null)
         {
-            // ดึงกล้องที่กำลังใช้งานอยู่ (รองรับการสลับกล้องจาก SettingController)
-            Camera activeCamera = Camera.main; 
-            if (activeCamera == null) return;
+            if (Mouse.current.leftButton.wasPressedThisFrame) isClickThisFrame = true; // เพิ่งกดเฟรมแรก
+            if (Mouse.current.leftButton.isPressed) isHeld = true;                     // กดค้างอยู่
+            screenPos = Mouse.current.position.ReadValue();
+        }
 
-            // 1. อ่านพิกัดเมาส์บนหน้าจอ
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            
-            // 2. ยิงเลเซอร์ (Ray) จากกล้อง พุ่งทะลุเมาส์ลงไปที่ฉาก
-            Ray ray = activeCamera.ScreenPointToRay(mousePos);
-            RaycastHit hit;
+        // --- 2. เช็กการทัช (Mobile) ---
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            if (Touchscreen.current.primaryTouch.press.wasPressedThisFrame) isClickThisFrame = true;
+            isHeld = true;
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
 
-            // 3. ถ้าเลเซอร์ชนกับพื้นฉาก (ที่มี Collider)
-            if (Physics.Raycast(ray, out hit))
+        // --- 3. สั่งทำงาน ---
+        if (isClickThisFrame || isHeld)
+        {
+            // ส่งค่า isClickThisFrame ไปเพื่อบอกว่าเป็นการกดครั้งแรกหรือกดค้าง
+            MoveToTarget(screenPos, isClickThisFrame);
+        }
+    }
+
+    void MoveToTarget(Vector2 screenPosition, bool forceUpdate)
+    {
+        mainCam = Camera.main;
+        if (mainCam == null) return;
+
+        Ray ray = mainCam.ScreenPointToRay(screenPosition);
+        RaycastHit hit;
+
+        // ยิงเลเซอร์หาพื้นดิน
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, groundLayer))
+        {
+            // 💡 พระเอกของเราอยู่ตรงนี้ครับ!
+            // ถ้าเป็นการ "กดคลิกครั้งแรก" (forceUpdate) 
+            // หรือ "กดค้าง แต่ลากเมาส์ห่างจากเป้าหมายเดิมเกิน 0.5 เมตร" (อัปเดตเป้าหมายใหม่)
+            if (forceUpdate || Vector3.Distance(hit.point, lastDestination) > updateThreshold)
             {
-                // 4. สั่งให้ตัวละครเดินไปที่จุดกระทบนั้นเลย!
                 agent.SetDestination(hit.point);
+                lastDestination = hit.point; // จำไว้ว่าสั่งไปที่พิกัดนี้แล้ว
             }
         }
     }

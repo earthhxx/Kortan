@@ -27,6 +27,7 @@ public class PlayerManager : MonoBehaviour
 
     [Header("Movement Reference")]
     [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private PlayerClickToMove clickMovement;
 
     [Header("Survival Settings")]
     public bool hasWinterCoat = false; // สวิตช์เช็กเสื้อกันหนาว
@@ -212,25 +213,28 @@ public class PlayerManager : MonoBehaviour
     }
 
     // --- Death & Reset ---
-
     public void HandleDeath()
     {
-        // Disable movement
+        // Disable WASD movement (ปิดเดินโหมดปกติ)
         if (playerMovement != null)
             playerMovement.enabled = false;
 
-        // Close inventory if open
+        // Disable Click movement (ปิดเดินโหมด Isometric ป้องกันศพเดินได้!)
+        if (clickMovement != null)
+            clickMovement.enabled = false;
+
+        // Close inventory if open (ใช้ ToggleInventory เพื่อให้สคริปต์มันเคลียร์ค่า isOpen กลับเป็น false ด้วย)
         var invManager = Object.FindFirstObjectByType<InventoryManager>();
-        if (invManager != null)
+        if (invManager != null && invManager.IsOpen)
         {
-            invManager.InventoryPanel.SetActive(false);
+            invManager.ToggleInventory();
         }
 
-        // Show game over UI
+        // Show game over UI (โชว์หน้าจอตาย)
         if (gameOverUI != null)
             gameOverUI.SetActive(true);
 
-        // Unlock cursor
+        // Unlock cursor (ปลดล็อกเมาส์ให้โชว์ขึ้นมา เพื่อจะได้เอาไปคลิกปุ่ม Restart / Main Menu ได้)
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -241,13 +245,21 @@ public class PlayerManager : MonoBehaviour
         inventorySystem.ClearAll();
         timeManager?.HardResetTime();
 
-        // Re-enable movement
-        if (playerMovement != null)
-            playerMovement.enabled = true;
+        // ไปตามหา SettingController บนฉาก
+        SettingController settings = Object.FindFirstObjectByType<SettingController>();
 
-        // Lock cursor
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (settings != null)
+        {
+            // โยนหน้าที่ให้ SettingController จัดการเปิด-ปิดสคริปต์เดิน และซ่อน-โชว์เมาส์ให้ตรงกับโหมดปัจจุบัน
+            settings.SetMovementMode(settings.currentMoveMode);
+        }
+        else
+        {
+            // กันเหนียวเผื่อหาตั้งค่าไม่เจอ ก็ให้กลับไปเป็นค่าเริ่มต้น (WASD)
+            if (playerMovement != null) playerMovement.enabled = true;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
         UpdateAllUI();
     }

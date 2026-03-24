@@ -26,7 +26,6 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         InitializeComponents();
-        LockCursor();
     }
 
     private void Update()
@@ -51,16 +50,6 @@ public class PlayerMovement : MonoBehaviour
         if (playerCamera == null)
             Debug.LogWarning("Player Camera not assigned! Camera look will be disabled.");
     }
-
-    /// <summary>
-    /// Lock and hide the cursor
-    /// </summary>
-    private void LockCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
     /// <summary>
     /// Update ground detection
     /// </summary>
@@ -151,14 +140,5 @@ public class PlayerMovement : MonoBehaviour
     {
         if (controller != null)
             controller.Move(velocity * Time.deltaTime);
-    }
-
-    /// <summary>
-    /// Unlock cursor (useful for pause menus)
-    /// </summary>
-    public void UnlockCursor()
-    {
-        Cursor.lockState = CursorLockMode.Confined;
-        Cursor.visible = true;
     }
 }

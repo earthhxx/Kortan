@@ -21,9 +21,5 @@ public static class GameManagerUtils
             Object.Destroy(uiSystem);
             Debug.Log("DDOL: UI System destroyed");
         }
-        
-        // 3. ปลดล็อกเมาส์ให้เป็นค่าพื้นฐาน
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 }
