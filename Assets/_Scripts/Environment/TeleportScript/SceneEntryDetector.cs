@@ -22,20 +22,25 @@ public class SceneEntryDetector : MonoBehaviour
         {
             // --- ส่วนสำคัญสำหรับการย้ายตำแหน่งตัวละคร DDOL ---
             
-            // ถ้ามี CharacterController ต้องปิดก่อนย้าย ไม่งั้นตำแหน่งจะเพี้ยนหรือกระตุกกลับ
+            // ดึง Component ทั้ง 2 ระบบเดินมาเตรียมไว้
             CharacterController cc = player.GetComponent<CharacterController>();
+            UnityEngine.AI.NavMeshAgent agent = player.GetComponent<UnityEngine.AI.NavMeshAgent>();
+
+            // 🔴 ปิดระบบเดินทั้งหมดก่อนย้าย! ไม่งั้นพิกัดจะเพี้ยนหรือเดินไม่ได้
             if (cc != null) cc.enabled = false;
+            if (agent != null) agent.enabled = false; // <--- เพิ่มตรงนี้เพื่อแก้บั๊กโหมดคลิกเดิน!
 
             // ย้ายตำแหน่งและมุมหัน
             player.transform.position = spawnPoint.transform.position;
             player.transform.rotation = spawnPoint.transform.rotation;
 
-            // เปิดกลับคืน
+            // 🟢 เปิดกลับคืน (ให้ SettingController มันจัดการต่อ หรือจะเปิดทิ้งไว้ตามโหมดก็ได้)
             if (cc != null) cc.enabled = true;
+            if (agent != null) agent.enabled = true;  // <--- เพิ่มตรงนี้เพื่อเปิดสมองกลกลับมา
 
             Debug.Log($"<color=green>Scene:</color> ย้ายผู้เล่นไปที่จุด {SceneData.TargetSpawnPointName}");
             
-            // 4. ล้างค่าทิ้งเพื่อไม่ให้เกิดการวาร์ปซ้ำถ้าโหลดฉากเดิมอีกครั้งโดยไม่ได้ผ่าน Portal
+            // 4. ล้างค่าทิ้งเพื่อไม่ให้เกิดการวาร์ปซ้ำ
             SceneData.TargetSpawnPointName = null;
         }
     }
