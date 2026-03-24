@@ -1,31 +1,38 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.InputSystem; // เพิ่มตัวนี้เพื่อให้เรียกใช้ Keyboard ง่ายขึ้น
+using UnityEngine.InputSystem;
 
 public class CheckoutPoint : MonoBehaviour
 {
-    public GameObject interactUI;
-    public TextMeshProUGUI promptText;
+    [Header("UI References")]
+    public GameObject interactUI;       // ลากตัว interactive (BG) มาใส่ช่องนี้
+    public TextMeshProUGUI checkoutText; // ลาก Checkout_text มาใส่ช่องนี้
+
     private bool isPlayerNearby = false;
+
+    void Start()
+    {
+        // ปิดข้อความไว้ก่อนตอนเริ่มเกม
+        if (checkoutText != null) checkoutText.gameObject.SetActive(false);
+    }
 
     void Update()
     {
-        // ใช้ Keyboard.current แทนการพิมพ์ยาวๆ
-        if (isPlayerNearby && Keyboard.current.eKey.wasPressedThisFrame)
+        if (isPlayerNearby && Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
-            PlayerStatus player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStatus>();
+            PlayerManager player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerManager>();
             
             if (player != null)
             {
                 if (player.cartList.Count > 0)
                 {
                     player.Checkout();
-                    UpdateCheckoutUI(player); // อัปเดตข้อความหลังจ่ายเงินเสร็จ
+                    UpdateCheckoutUI(player); 
                 }
                 else
                 {
                     Debug.Log("ไม่มีสินค้าในตะกร้า!");
-                    if (promptText != null) promptText.text = "<color=red>ตะกร้าว่างเปล่า!</color>";
+                    if (checkoutText != null) checkoutText.text = "<color=red>ตะกร้าว่างเปล่า!</color>";
                 }
             }
         }
@@ -36,9 +43,14 @@ public class CheckoutPoint : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             isPlayerNearby = true;
+            
+            // 1. เปิดแผ่นป้าย BG
             if (interactUI != null) interactUI.SetActive(true);
             
-            PlayerStatus player = other.GetComponent<PlayerStatus>();
+            // 2. เปิดเฉพาะข้อความ Checkout
+            if (checkoutText != null) checkoutText.gameObject.SetActive(true);
+            
+            PlayerManager player = other.GetComponent<PlayerManager>();
             UpdateCheckoutUI(player);
         }
     }
@@ -48,24 +60,28 @@ public class CheckoutPoint : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             isPlayerNearby = false;
+            
+            // ปิดแผ่นป้าย BG (พวก Text ที่เป็นลูกก็จะโดนซ่อนไปด้วยอัตโนมัติ)
             if (interactUI != null) interactUI.SetActive(false);
+            
+            // ปิดข้อความตัวเองเผื่อไว้ด้วย
+            if (checkoutText != null) checkoutText.gameObject.SetActive(false);
         }
     }
 
-    // ฟังก์ชันช่วยอัปเดตข้อความให้โชว์จำนวนของและราคาทั้งหมด
-    void UpdateCheckoutUI(PlayerStatus player)
+    void UpdateCheckoutUI(PlayerManager player)
     {
-        if (promptText == null || player == null) return;
+        if (checkoutText == null || player == null) return;
 
         if (player.cartList.Count > 0)
         {
             int total = 0;
             foreach (var item in player.cartList) total += item.price;
-            promptText.text = $"[E] จ่ายเงิน {player.cartList.Count} รายการ\nยอดรวม: <color=yellow>{total} บาท</color>";
+            checkoutText.text = $"[E] จ่ายเงิน {player.cartList.Count} รายการ\nยอดรวม: <color=yellow>{total} บาท</color>";
         }
         else
         {
-            promptText.text = "ตะกร้าว่างเปล่า";
+            checkoutText.text = "ตะกร้าว่างเปล่า";
         }
     }
 }

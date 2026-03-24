@@ -1,36 +1,56 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections.Generic;
 
 public class InventoryManager : MonoBehaviour
 {
-    public GameObject inventoryPanel; // ลาก InventoryPanel มาใส่
-    public Transform itemContainer;   // ลาก ItemContainer มาใส่
-    public GameObject slotPrefab;     // ลาก ItemSlot (จาก Project/Prefab) มาใส่
+    // === 1. Static Data (ตั้งค่าใน Inspector) ===
+    [Header("=== 1. UI References ===")]
+    [SerializeField] private GameObject inventoryPanel;  // ลาก InventoryPanel มาใส่
+    [SerializeField] private Transform itemContainer;    // ลาก ItemContainer มาใส่
+    [SerializeField] private GameObject slotPrefab;      // ลาก ItemSlot Prefab มาใส่
 
-    private bool isOpen = false;
+    [Header("=== 2. Input Settings ===")]
+    // เปลี่ยนจาก KeyCode เป็น Key (ของ UnityEngine.InputSystem)
+    [SerializeField] private Key inventoryKeyNew = Key.I;
+
+    // === 2. Runtime Data (ข้อมูลตอนเล่น - ซ่อนจาก Inspector) ===
+    [System.NonSerialized] private bool isOpen = false;
+    [System.NonSerialized] private PlayerManager cachedPlayer;
+
+    // === 3. Properties (ทำให้โค้ดสะอาด) ===
+    public bool IsOpen => isOpen;
+    public GameObject InventoryPanel => inventoryPanel; // Allow external access to close inventory on death
+
+    // === 4. Lifecycle ===
 
     void Start()
     {
-        inventoryPanel.SetActive(false); // เริ่มมาให้ปิดไว้ก่อน
+        inventoryPanel.SetActive(false);
+        // Cache PlayerStatus reference เพื่อไม่ต้องเรียก FindGameObject ทุก frame
+        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerManager>();
+
+        if (cachedPlayer == null)
+        {
+            Debug.LogError("[InventoryManager] Player not found!");
+        }
+
         RefreshInventory();
     }
 
     void Update()
     {
-        // 1. หา PlayerStatus เพื่อเช็กว่าตายหรือยัง
-        PlayerStatus player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStatus>();
+        // ใช้ cached player แทน FindGameObject
+        if (cachedPlayer == null) return;
 
-        // 2. ถ้าตายแล้ว (isDead == true) ให้หยุดทำงานตรงนี้เลย ไม่ต้องเช็กปุ่ม I
-        if (player != null && player.isDead)
+        // ถ้าตายแล้ว ให้ปิดกระเป๋าและหยุดทำงาน
+        if (cachedPlayer.isDead)
         {
-            // ถ้าเผลอเปิดกระเป๋าค้างไว้ตอนตาย ก็ให้ปิดซะ
             if (isOpen) ToggleInventory();
             return;
         }
 
-        // โค้ดกดปุ่ม I เดิม
-        if (Keyboard.current.iKey.wasPressedThisFrame)
+        // ตรวจสอบปุ่มเปิดกระเป๋า
+        if (Keyboard.current[inventoryKeyNew].wasPressedThisFrame)
         {
             ToggleInventory();
         }
@@ -41,46 +61,74 @@ public class InventoryManager : MonoBehaviour
         isOpen = !isOpen;
         inventoryPanel.SetActive(isOpen);
 
-        // หาตัวละคร Player
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        // หาปุ่มควบคุมกล้อง (ปรับชื่อ PlayerMovement หรือ LookCamera ให้ตรงกับของคุณ)
-        var movementScript = player.GetComponent<PlayerMovement>();
+        // Get movement scripts and settings
+        PlayerMovement movementScript = cachedPlayer?.GetComponent<PlayerMovement>();
+        PlayerClickToMove clickMovementScript = cachedPlayer?.GetComponent<PlayerClickToMove>();
+        SettingController settings = Object.FindFirstObjectByType<SettingController>();
 
         if (isOpen)
         {
+            // --- ตอนเปิดกระเป๋า ---
+            // 1. ปล่อยเมาส์ให้เป็นอิสระเสมอ เพื่อให้เอาไปคลิกของได้
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-            if (movementScript != null) movementScript.enabled = false; // หยุดขยับ/หมุนกล้อง
+
+            // 2. ปิดสคริปต์เดิน (เพื่อไม่ให้ตัวละครขยับตอนเราจัดของ)
+            if (movementScript != null) movementScript.enabled = false;
+            if (clickMovementScript != null) clickMovementScript.enabled = false;
+
             RefreshInventory();
+            Debug.Log("<color=yellow>Inventory:</color> เปิดกระเป๋า");
         }
         else
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            if (movementScript != null) movementScript.enabled = true; // กลับมาขยับได้ปกติ
+            // --- ตอนปิดกระเป๋า ---
+            // 1. เช็กโหมดปัจจุบันจาก SettingController
+            if (settings != null && settings.currentMoveMode == SettingController.MovementMode.WASD)
+            {
+                // ถ้าเป็นโหมด FPS (WASD) -> เปิดสคริปต์เดิน WASD และ "ล็อกเมาส์+ซ่อนเมาส์"
+                if (movementScript != null) movementScript.enabled = true;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            else
+            {
+                // ถ้าเป็นโหมด Isometric (หรือหา Setting ไม่เจอ) -> เปิดสคริปต์เดินคลิก และ "ปล่อยเมาส์โชว์ไว้"
+                if (clickMovementScript != null) clickMovementScript.enabled = true;
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+
+            Debug.Log("<color=yellow>Inventory:</color> ปิดกระเป๋า");
         }
     }
 
+    /// <summary>
+    /// Refresh inventory display - recreate all slots from player inventory
+    /// </summary>
     public void RefreshInventory()
     {
-        foreach (Transform child in itemContainer) Destroy(child.gameObject);
+        if (cachedPlayer == null || cachedPlayer.InventorySystem == null) return;
 
-        PlayerStatus player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStatus>();
+        // Clear old slots
+        foreach (Transform child in itemContainer)
+            Destroy(child.gameObject);
 
-        foreach (ItemData data in player.inventoryList)
+        // Create slots for each item
+        foreach (ItemData data in cachedPlayer.InventorySystem.InventoryList)
         {
             GameObject newSlot = Instantiate(slotPrefab, itemContainer);
 
-            // บรรทัดนี้สำคัญมาก! ส่งข้อมูลไอเทมเข้าสคริปต์ของช่องนั้น
             InventorySlot slotScript = newSlot.GetComponent<InventorySlot>();
             if (slotScript != null)
             {
-                slotScript.item = data;
+                slotScript.Initialize(data, cachedPlayer, this);
             }
 
-            // เซตความสวยงาม
-            var iconImage = newSlot.transform.Find("Icon").GetComponent<UnityEngine.UI.Image>();
-            iconImage.sprite = data.icon;
+            // Set visual
+            var iconImage = newSlot.transform.Find("Icon")?.GetComponent<UnityEngine.UI.Image>();
+            if (iconImage != null)
+                iconImage.sprite = data.icon;
         }
     }
 }
