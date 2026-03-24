@@ -4,13 +4,13 @@ using UnityEngine.EventSystems;
 public class InventorySlot : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private ItemData item;
-    private PlayerStatus playerStatus; // Cache reference - ไม่ต้องเรียก FindGameObject ซ้ำ
+    private PlayerManager playerStatus; // Cache reference - ไม่ต้องเรียก FindGameObject ซ้ำ
     private InventoryManager inventoryManager;
 
     /// <summary>
     /// Initialize slot with all required references
     /// </summary>
-    public void Initialize(ItemData itemData, PlayerStatus player, InventoryManager invManager)
+    public void Initialize(ItemData itemData, PlayerManager player, InventoryManager invManager)
     {
         item = itemData;
         playerStatus = player;

@@ -20,7 +20,7 @@ public class CheckoutPoint : MonoBehaviour
     {
         if (isPlayerNearby && Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
-            PlayerStatus player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStatus>();
+            PlayerManager player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerManager>();
             
             if (player != null)
             {
@@ -50,7 +50,7 @@ public class CheckoutPoint : MonoBehaviour
             // 2. เปิดเฉพาะข้อความ Checkout
             if (checkoutText != null) checkoutText.gameObject.SetActive(true);
             
-            PlayerStatus player = other.GetComponent<PlayerStatus>();
+            PlayerManager player = other.GetComponent<PlayerManager>();
             UpdateCheckoutUI(player);
         }
     }
@@ -69,7 +69,7 @@ public class CheckoutPoint : MonoBehaviour
         }
     }
 
-    void UpdateCheckoutUI(PlayerStatus player)
+    void UpdateCheckoutUI(PlayerManager player)
     {
         if (checkoutText == null || player == null) return;
 

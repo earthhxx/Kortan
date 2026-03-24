@@ -22,7 +22,7 @@ public class TimeManager : MonoBehaviour
     // ระบบภายใน
     private float originalMultiplier;
     private bool isSleeping = false;
-    private PlayerStatus cachedPlayer;
+    private PlayerManager cachedPlayer;
     private int lastDay; // ตัวแปรเก็บวันที่ล่าสุดที่เราเช็ก เพื่อให้รู้ว่าเปลี่ยนวันแล้ว
     void Awake() // เปลี่ยนจาก Start เป็น Awake เพื่อให้โหลดก่อน Update เฟรมแรก
     {
@@ -30,7 +30,7 @@ public class TimeManager : MonoBehaviour
     }
     void Start()
     {
-        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStatus>();
+        cachedPlayer = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerManager>();
         originalMultiplier = timeMultiplier;
 
         // ตั้งค่าตัวจำวันจากเวลาที่โหลดมาแล้วใน Awake
@@ -119,7 +119,7 @@ public class TimeManager : MonoBehaviour
     }
 
     // ในไฟล์ TimeManager.cs ฟังก์ชัน CheckWeather
-    void CheckWeather(PlayerStatus player)
+    void CheckWeather(PlayerManager player)
     {
         if (player.isDead) return;
 
